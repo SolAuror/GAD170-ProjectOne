@@ -1,0 +1,2 @@
+drop these scripts into an empty folder in unity, goto project settings and input, change the input controller to SimpleControls.inputactions and add the DebugOps script to an empty game object in an empty scene, 
+then click play an look at the console, make sure the game window is focussed when you are running it 
