@@ -1,14 +1,16 @@
 using System.Collections.Generic;                                                                             //System.Collections.Generic - for using lists
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;                                                                                             //using TMPro for TextMeshPro references
+using UnityEngine.UI;                                                                                      //using UnityEngine.UI for Slider references
 using PartyTaxes;                                                                                             //using the PartyTaxes namespace to access the PTSoul class
 
-namespace PartyTaxes {
 public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
 {
   [Header("Character & Enemy Prefabs")]
   public GameObject[] characterPrefabs;                                                                     //array of character prefabs to instantiate for starting party
   public GameObject enemyPrefab;                                                                            //varaible for enemy prefabs to spawn
+  public Transform partySpawnPoint;                                                                         //transform for party spawn location
   public Transform enemySpawnPoint;                                                                         //transform for enemy spawn location
 
   [Header("Party & Combat")]
@@ -25,6 +27,8 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
   public AudioClip BGMusic;                                                                                   //AudioClip for background music
   public AudioClip AtkSound;                                                                                   //AudioClip for attack sound effect
   public AudioClip SleepSound;                                                                                   //AudioClip for sleep sound effect
+  [SerializeField] public TextMeshProUGUI battleText;                                                                 //reference to TextMeshPro level text obj
+  [SerializeField] public TextMeshProUGUI goldText;                                                                  //reference to TextMeshPro gold text obj
 
 
   public string partyName = "The Adventurers";                                                             //variable string for the party name
@@ -39,8 +43,10 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
 
   public bool canSleep = true;                                                                            //bool to check if sleeping is allowed  
   public bool hasFought = false;                                                                          //bool to check if the player has fought
+  public bool hasHealed = false;                                                                          //bool to check if the player has used healing today
 
   private SimpleControls controls;                                                                         //reference to the input controls
+  private AudioSource audioSource;                                                                         //reference to the AudioSource component
 
     void Awake()
     {
@@ -50,6 +56,15 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
 
     void Start()                                                                                        // Start, called once before the first update after the script is loaded
     {   
+        // Set up background music
+        audioSource = GetComponent<AudioSource>();                                                      //get the AudioSource component
+        if (BGMusic != null)                                                                            //if BGMusic clip is assigned
+        {
+            audioSource.clip = BGMusic;                                                                 //set the audio clip
+            audioSource.loop = true;                                                                    //enable looping
+            audioSource.Play();                                                                         //play the music
+        }
+
         // Create starting party members from prefabs
         if (characterPrefabs != null && characterPrefabs.Length > 0)
         {
@@ -68,6 +83,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
                    " Spacebar to sleep through the night.";                                             //display instructions for sleeping
         daysElapsed++;                                                                                  //increment the day
         Debug.Log(dailyMsg);                                                                            //print the daily message
+        UpdateUI();                                                                                     //update UI with initial values
     }
 
     void Update()                                                                                                     //On Update
@@ -95,7 +111,12 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
         {
             if (prefab != null)
             {
-                GameObject characterObj = Instantiate(prefab, transform);                                  //instantiate character as child of PTManager
+                Vector3 baseSpawnPosition = partySpawnPoint != null ? partySpawnPoint.position : transform.position;  //use spawn point if assigned, otherwise use PTManager position
+                float spacing = 1f;                                                                               //spacing between party members along x-axis
+                Vector3 offset = new Vector3(partyMembers.Count * spacing, 0, 0);                                //calculate offset based on current party size
+                Vector3 spawnPosition = baseSpawnPosition + offset;                                              //calculate spawn position with offset
+                
+                GameObject characterObj = Instantiate(prefab, spawnPosition, Quaternion.identity, transform);  //instantiate character at spawn position as child of PTManager
                 PTSoul soul = characterObj.GetComponent<PTSoul>();                                          //get the PTSoul component
                 if (soul != null)
                 {
@@ -132,6 +153,28 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
         return totalWages;                                                                                  //return total wages
     }
 
+    void UpdateUI()                                                                                         //method to update UI elements
+    {
+        // Update gold text
+        if (goldText != null)
+        {
+            goldText.text = "Gold: " + gold;                                                              //display current gold
+        }
+        
+        // Update battle text
+        if (battleText != null)
+        {
+            if (adversaries.Count > 0)                                                                      //if in battle
+            {
+                battleText.text = "There is currently " + adversaries.Count + " enemies";               //display enemy count
+            }
+            else                                                                                            //if not in battle
+            {
+                battleText.text = "In Town";                                                             //display in town message
+            }
+        }
+    }
+
 #region Input Actions
     public void OnSleep(InputAction.CallbackContext context)                                                    //function to handle spacebar press, using new InputActions system     
     {
@@ -144,6 +187,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
                 totalWages = CalculateTotalDailyWages();                                                    //calculate total daily wages from all party members
                 gold -= totalWages;                                                                             //subtract total daily wages from gold
                 hasFought = false;                                                                              //reset hasFought for the new day
+                hasHealed = false;                                                                              //reset hasHealed for the new day
                 
                 dailyMsg = "Heil, " + partyName +                                                               //greet the party,
                           "! You have " + gold +                                                                //display the party gold
@@ -152,6 +196,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
                           ". Press E to encounter an enemy, Left Click to Attack it or" +                       //display instructions for fighting enemies
                           " Spacebar to sleep through the night.";                                              //display instructions for sleeping
                 Debug.Log(dailyMsg);                                                                            //print the daily message
+                UpdateUI();                                                                                     //update UI after sleeping
             }
             else
             {
@@ -166,7 +211,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
         {
             if (!hasFought)                                                                                      // Only allow one encounter per day
             {
-              int spawnCount = Random.Range(partyCount, partyCount * 5);                                          //random number of enemies to spawn, between party count += * 5
+              int spawnCount = Random.Range(partyCount, partyCount * 3);                                          //random number of enemies to spawn, between party count += * 5
               enemyCount += spawnCount;                                                                         //adds a random number between 4 and 15 to the enemy count  
               
               // Create enemy GameObjects from prefab
@@ -199,6 +244,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
 
                 Debug.Log(enemyMsg);                                                                             //print enemy message
                 totalEnemies = enemyCount;                                                                       // Store the total number of enemies for victory/gold calculation
+                UpdateUI();                                                                                      //update UI when enemies spawn
             }
             else if (hasFought && enemyCount > 0)                                                                //check if the player has already fought for the day
             {
@@ -215,18 +261,27 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
     { 
       if (context.performed && adversaries.Count > 0)                                                             //check if attack key is pressed and there are enemies to fight
       {
-        // Random party member attacks random enemy
+        // All party members attack simultaneously
         if (partyMembers.Count > 0)
         {
-          PTSoul attacker = partyMembers[Random.Range(0, partyMembers.Count)];                                   //select random party member to attack
-          PTSoul target = adversaries[Random.Range(0, adversaries.Count)];                                       //select random enemy to target
+          Debug.Log("=== PARTY ATTACKS ===");
           
-          int damage = attacker.DealDamage();                                                                    //calculate damage from attacker
-          target.TakeDamage(damage);                                                                             //apply damage to target
+          // Each party member attacks a random enemy
+          foreach (PTSoul attacker in partyMembers)
+          {
+              if (adversaries.Count > 0)                                                                         //check if there are still enemies to attack
+              {
+                  PTSoul target = adversaries[Random.Range(0, adversaries.Count)];                              //select random enemy to target
+                  
+                  int damage = attacker.DealDamage();                                                            //calculate damage from attacker
+                  target.TakeDamage(damage);                                                                     //apply damage to target
+                  
+                  Debug.Log(attacker.Name + " attacks " + target.Type + " for " + damage + " damage! " + 
+                            target.Type + " has " + target.currentHP + "/" + target.maxHP + " HP remaining.");
+              }
+          }
           
-          Debug.Log(attacker.Name + " attacks " + target.Type + " for " + damage + " damage! " + target.Type + " has " + target.currentHP + "/" + target.maxHP + " HP remaining.");
-          
-          // Remove dead enemies
+          // Remove dead enemies after all party attacks
           for (int i = adversaries.Count - 1; i >= 0; i--)                                                       //loop backwards through adversaries to safely remove
           {
               if (!adversaries[i].isAlive)                                                                       //check if enemy is dead
@@ -236,22 +291,47 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
                   Destroy(deadEnemy.gameObject);                                                                 //destroy enemy GameObject
                   adversaries.RemoveAt(i);                                                                       //remove from list
 
-                  Debug.Log(deadEnemy.Type + " has been defeated! you found " + deadEnemy.goldReward + " gold on the corpse.");                             //print enemy defeated message with gold reward
+                  Debug.Log(deadEnemy.Type + " has been defeated! you found " +
+                            deadEnemy.goldReward + " gold on the corpse.");                                     //print enemy defeated message with gold reward
               }
           }
           
-          // Enemy counter-attack
-          if (adversaries.Count > 0 && partyMembers.Count > 0)                                                   //check if there are still enemies and party members alive
+          UpdateUI();                                                                                        //update UI after enemies are defeated
+          
+          // Check if all enemies are defeated
+          if (adversaries.Count == 0)
           {
-              PTSoul enemyAttacker = adversaries[Random.Range(0, adversaries.Count)];                           //select random enemy to attack
-              PTSoul partyTarget = partyMembers[Random.Range(0, partyMembers.Count)];                           //select random party member to target
+            gold += commision;                                                                                   //add bonus commission for winning
+            canSleep = true;                                                                                     //enable sleeping
+            enemyCount = 0;                                                                                      //reset enemy count
+            totalEnemies = 0;                                                                                    //reset total enemies
+
+            Debug.Log("You have defeated all the enemies! You can now sleep through the night.");                //print victory message
+            Debug.Log("You earned a commision of " + commision + " gold! You have " + gold + " gold in total."); //print gold earned message
+            UpdateUI();                                                                                          //update UI after victory
+            return;                                                                                              //exit function early since battle is over
+          }
+          
+          // All enemies counter-attack simultaneously
+          if (adversaries.Count > 0 && partyMembers.Count > 0)                                                  //check if there are still enemies and party members alive
+          {
+              Debug.Log("=== ENEMIES COUNTER-ATTACK ===");
               
-              int enemyDamage = enemyAttacker.DealDamage();                                                      //calculate damage from enemy
-              partyTarget.TakeDamage(enemyDamage);                                                               //apply damage to party member
+              // Each enemy attacks a random party member
+              foreach (PTSoul enemyAttacker in adversaries)
+              {
+                  if (partyMembers.Count > 0)                                                                    //check if there are still party members to attack
+                  {
+                      PTSoul partyTarget = partyMembers[Random.Range(0, partyMembers.Count)];                   //select random party member to target
+                      
+                      int enemyDamage = enemyAttacker.DealDamage();                                              //calculate damage from enemy
+                      partyTarget.TakeDamage(enemyDamage);                                                       //apply damage to party member
+                      
+                      Debug.Log(enemyAttacker.Type + " attacks " + partyTarget.Name + " for " + enemyDamage + " damage! " + partyTarget.Name + " has " + partyTarget.currentHP + "/" + partyTarget.maxHP + " HP remaining.");
+                  }
+              }
               
-              Debug.Log(enemyAttacker.Type + " attacks " + partyTarget.Name + " for " + enemyDamage + " damage! " + partyTarget.Name + " has " + partyTarget.currentHP + "/" + partyTarget.maxHP + " HP remaining.");
-              
-              // Remove dead party members
+              // Remove dead party members after all enemy attacks
               for (int i = partyMembers.Count - 1; i >= 0; i--)                                                 //loop backwards through party members to safely remove
               {
                   if (!partyMembers[i].isAlive)                                                                 //check if party member is dead
@@ -265,26 +345,12 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
               // Check if all party members are dead
               if (partyMembers.Count == 0)
               {
-                  Debug.Log("Your entire party has been wiped out! Game Over.");                                //print game over message
+                  Debug.Log("You've been slaughtered by the enemy! Game Over.");                                //print game over message
                   OnDisable();                                                                                  //disable the script
                   return;                                                                                       //exit the function
               }
-          }
-          
-          // Check if all enemies are defeated
-          if (adversaries.Count == 0)
-          {
-            gold += commision;                                                                                   //add bonus commission for winning
-            canSleep = true;                                                                                     //enable sleeping
-            enemyCount = 0;                                                                                      //reset enemy count
-            totalEnemies = 0;                                                                                    //reset total enemies
-
-            Debug.Log("You have defeated all the enemies! You can now sleep through the night.");                //print victory message
-            Debug.Log("You earned a commision of " + commision + " gold! You have " + gold + " gold in total."); //print gold earned message
-          }
-          else
-          {
-            Debug.Log(adversaries.Count + " " + adversaries[0].Type + "s remaining.");                           //print remaining enemies
+              
+              Debug.Log(adversaries.Count + " " + adversaries[0].Type + "s remaining.");                        //print remaining enemies
           }
         }
       }
@@ -298,7 +364,43 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
     {
       if (context.performed)
       {
-        return;
+        // Check if not in battle
+        if (adversaries.Count > 0)
+        {
+          Debug.Log("You cannot heal during battle!");
+          return;
+        }
+
+        // Check if already healed today
+        if (hasHealed)
+        {
+          Debug.Log("You have already exhausted the local potion supply, try again tomorrow.");
+          return;
+        }
+
+        // Calculate cost (10 gold per party member)
+        int healCost = partyMembers.Count * 10;
+
+        // Check if player has enough gold
+        if (gold < healCost)
+        {
+          Debug.Log("Not enough gold! You need " + healCost + " gold to heal the party, but you only have " + gold + " gold.");
+          return;
+        }
+
+        // Heal each party member for 50 HP
+        gold -= healCost;
+        int totalHealed = 0;
+        foreach (PTSoul member in partyMembers)
+        {
+          int healed = member.Heal(50);
+          totalHealed += healed;
+          Debug.Log(member.Name + " was healed for " + healed + " HP! (" + member.currentHP + "/" + member.maxHP + " HP)");
+        }
+
+        hasHealed = true;                                                                                        //mark healing as used for the day
+        Debug.Log("The Party has been Blessed! Total healed: " + totalHealed + " HP. Cost: " + healCost + " gold. Remaining gold: " + gold);
+        UpdateUI();                                                                                              //update UI after healing (gold changed)
       }
     }
 
@@ -306,7 +408,32 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
     {
       if (context.performed)
       {
-        return;
+        // Check if in combat
+        if (adversaries.Count > 0)
+        {
+          Debug.Log("You cannot recruit new party members during combat!");
+          return;
+        }
+
+        // Check if party is full
+        if (partyMembers.Count >= maxPartyCount)
+        {
+          Debug.Log("The party is full! You cannot add more members to the party.");
+          return;
+        }
+
+        // Check if there are character prefabs available
+        if (characterPrefabs == null || characterPrefabs.Length == 0)
+        {
+          Debug.Log("No character prefabs available to add to the party!");
+          return;
+        }
+
+        // Select a random character prefab
+        GameObject randomPrefab = characterPrefabs[Random.Range(0, characterPrefabs.Length)];
+        
+        // Add the party member
+        AddPartyMember(randomPrefab);
       }
     }
 
@@ -326,5 +453,4 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions
       }
     }
     #endregion
-}
 }
