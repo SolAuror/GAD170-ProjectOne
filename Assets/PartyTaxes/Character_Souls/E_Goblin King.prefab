@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1551675832491491503}
   - component: {fileID: 5174762750743119226}
   m_Layer: 0
-  m_Name: Goblin
+  m_Name: E_Goblin King
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29,8 +29,8 @@ Transform:
   m_GameObject: {fileID: 7052404560761537993}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.44315, y: 0.44315, z: 0.44315}
+  m_LocalPosition: {x: 0.025216, y: -0.057635, z: 0}
+  m_LocalScale: {x: 0.6417559, y: 0.7945859, z: 0.5201503}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3060238709850110001}
@@ -134,19 +134,19 @@ MonoBehaviour:
   nameText: {fileID: 4445043107481389989}
   healthText: {fileID: 8524999208630809546}
   healthSlider: {fileID: 3513492117987365118}
-  Name: 
-  Type: Goblin
-  level: 1
+  Name: Goblin King
+  Type: Orc
+  level: 6
   currentXp: 0
   xpToNextLevel: 0
-  maxHP: 20
-  currentHP: 20
-  attack: 5
-  defense: 2
+  maxHP: 60
+  currentHP: 60
+  attack: 10
+  defense: 9
   dailywages: 0
   isAdversary: 1
-  goldReward: 1
-  accumulatedLifeXp: 25
+  goldReward: 200
+  accumulatedLifeXp: 200
 --- !u!1001 &6922399244095160488
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -173,27 +173,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.9552473
+      value: 1.9180907
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.7884443
-      objectReference: {fileID: 0}
-    - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1.7400588
+      value: 1.6062967
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.086
+      value: -0.095317
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.807
+      value: 1.469
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.1545
+      value: 1.243
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalRotation.w
@@ -223,9 +219,29 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5824037333073924182, guid: e977f8e255bae82468cd307503430227, type: 3}
-      propertyPath: m_Interactable
-      value: 0
+    - target: {fileID: 6225914896393157441, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.44558695
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225914896393157441, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 170
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225914896393157441, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 61
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755041311264574221, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_text
+      value: Goblin King
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755041311264574221, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_VerticalAlignment
+      value: 512
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755041311264574221, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_HorizontalAlignment
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

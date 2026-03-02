@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2280294452862141446}
   - component: {fileID: 7683145268815020551}
   m_Layer: 0
-  m_Name: Blanku
+  m_Name: P_Blanku
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,9 +28,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8183285708965617602}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.01518989, z: -0, w: 0.99988467}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0}
-  m_LocalScale: {x: 0.3096709, y: 0.9543834, z: 0.3170391}
+  m_LocalRotation: {x: 0, y: 0.015192511, z: 0, w: 0.9998846}
+  m_LocalPosition: {x: 0, y: 0.478, z: 0}
+  m_LocalScale: {x: 0.3096709, y: 0.8786149, z: 0.3170391}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2148036856012943}
@@ -69,7 +69,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: cc38b379d49413c4bbec25d9b88e4ff9, type: 2}
+  - {fileID: 2100000, guid: 213a3d257a24ef84d93906b90fb499ae, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -132,8 +132,8 @@ MonoBehaviour:
   nameText: {fileID: 1715995030847329051}
   healthText: {fileID: 6643204006026636148}
   healthSlider: {fileID: 1926952621046892608}
-  Name: Blanku
-  Type: Human
+  Name: Banku
+  Type: Halfling
   level: 1
   currentXp: 0
   xpToNextLevel: 0
@@ -170,16 +170,28 @@ PrefabInstance:
       value: UI_Bars
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2.8801
+      objectReference: {fileID: 0}
+    - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.7062
+      objectReference: {fileID: 0}
+    - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.08
+      value: -0.16
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.812
+      value: 0.982
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.7
+      value: 0.69
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalRotation.w
@@ -208,6 +220,30 @@ PrefabInstance:
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225914896393157441, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225914896393157441, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 174
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225914896393157441, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 61.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755041311264574221, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_text
+      value: Blanku
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755041311264574221, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_VerticalAlignment
+      value: 512
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755041311264574221, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_HorizontalAlignment
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

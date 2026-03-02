@@ -13,7 +13,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
 
   [Header("Character & Enemy Prefabs")]                                                                      //header for character prefabs in theinspector
   public GameObject[] characterPrefabs;                                                                      //array of character prefabs to instantiate for starting party
-  public GameObject enemyPrefab;                                                                             //varaible for enemy prefabs to spawn
+  public GameObject[] enemyPrefabs;                                                                           //array of enemy prefabs to randomly spawn from
   public Transform partySpawnPoint;                                                                          //transform for party spawn location
   public Transform enemySpawnPoint;                                                                          //transform for enemy spawn location
 
@@ -22,7 +22,8 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
   public List<PTSoul> adversaries = new List<PTSoul>();                                                      //list to store the enemies, using the PTSoul class for an individuals information.
   public int enemyCount = 0;                                                                                 //integer # of enemies to fight
   public int gold = 90;                                                                                      //integer # of gold     
-  public int commision = 50;                                                                                 //integer # gold bonus from surviving combat
+  public int commission = 50;                                                                                //integer # gold bonus from surviving combat
+  public int weeklyBonusCommission = 50;                                                                     //integer # gold bonus from living for a week
   public int totalWages;                                                                                     //integer # for total calculated wages, party member count x character dailywages.
   public int daysElapsed = 0;                                                                                //integer # of days elapsed       
   public int partyCount;                                                                                     //integer # of party members
@@ -37,11 +38,11 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
   [Header("UI References")]                                                                                 //header for UI references in the inspector
   public TextMeshProUGUI battleText;                                                                        //reference to TextMeshPro level text obj
   public TextMeshProUGUI goldText;                                                                          //reference to TextMeshPro gold text obj
-  public TextMeshProUGUI dayText;                                                                         //reference to TextMeshPro day text obj
-  public TextMeshProUGUI PartyNameText;                                                                   //reference to TextMeshPro party name text obj
+  public TextMeshProUGUI dayText;                                                                           //reference to TextMeshPro day text obj
+  public TextMeshProUGUI PartyNameText;                                                                     //reference to TextMeshPro party name text obj
   public string dailyMsg;                                                                                    //variable string for the daily message
   public string enemyMsg;                                                                                    //variable string for the enemy message
-  public string[] sleepMsgs = {
+  public string[] sleepMsgs = {                                                                              //string array for possible messages
     "You sleep roughly through the night and wake up feeling restless.",
     "You sleep soundly through this night and wake up feeling refreshed.",
     "You don't sleep at all this night, you feel lethargic and worn out."
@@ -50,6 +51,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
   public bool canSleep = true;                                                                               //bool to check if sleeping is allowed  
   public bool hasFought = false;                                                                             //bool to check if the player has fought
   public bool hasHealed = false;                                                                             //bool to check if the player has healed
+  public bool hasBeenBlessed = false;
   public bool gameOver = false;                                                                              //bool to check if the game is over  
   public int daysWithoutGold = 0;                                                                            //integer tracking consecutive days the party has had no gold, game over after 3
   
@@ -61,8 +63,8 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
 #region Initilization and Update
     void Awake()                                                                                             //On Awake, called once before start.   
     {
-        controls = new SimpleControls();                                                                     //initialize controls 
-        controls.Player.SetCallbacks(this);
+        controls = new SimpleControls();                                                                     //initialize controls in Awake (ScriptableObject creation is not allowed in field initializers)
+        controls.Player.SetCallbacks(this);                                                                  //register input callbacks
     }
 
     void Start()                                                                                             //On Game Start, called once before update
@@ -111,12 +113,12 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
 
     void OnEnable()                                                                                         //Method for enabling the input controls
     {
-        controls.Player.Enable();
+        controls?.Player.Enable();    //NOTE TO SELF: null conditional to avoid errors if controls is not assigned for some reason
     }
 
     void OnDisable()                                                                                        //Method for disabling the input controls
     {
-        controls.Player.Disable();
+        controls?.Player.Disable();
     }
 #endregion
 
@@ -221,7 +223,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
 
         if (dayText != null)
         {
-            dayText.text = "Day: " + daysElapsed;                                                            //display current day
+            dayText.text = "Day's passed: " + daysElapsed;                                                            //display current day
         }
 
         if (PartyNameText != null)
@@ -240,7 +242,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
         gold += amount;
         gold = Mathf.Max(gold, 0);                                                                         //clamp gold so it never goes negative
 
-        if (audioSource != null && goldSound != null)
+        if (goldSound != null)
         {
             audioSource.PlayOneShot(goldSound);                                                             //play gold sound effect when gold changes
         }
@@ -274,7 +276,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
 #endregion
 
 #region Input Actions
-    public void OnSleep(InputAction.CallbackContext context)                                                //Method to handle spacebar press, using new InputActions system     
+    public void OnSleep(InputAction.CallbackContext context)                                                //Method to handle Spacebar press, using new InputActions system     
     {
         if (gameOver) return;                                                                               //block input after game over
         if (context.performed)
@@ -285,23 +287,23 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
                 daysElapsed++;                                                                              //increment the day
                 PTAdventureLog.Log(sleepMsgs[Random.Range(0, sleepMsgs.Length)] + " Day: " + daysElapsed);  //log sleeping message
                 totalWages = CalculateTotalDailyWages();                                                    //calculate total daily wages from all party members
-                ChangeGold(-totalWages);                                                                    //subtract total daily wages from gold
-
-                if (gold <= 0)                                                                              //check if the party has run out of gold after paying wages
+                
+                if (gold >= totalWages)                                                                     //check if the party can afford to pay wages
+                {
+                    ChangeGold(-totalWages);                                                                //subtract total daily wages from gold
+                    daysWithoutGold = 0;                                                                    //reset broke counter since wages were paid
+                }
+                else                                                                                        //if the party cannot afford wages
                 {
                     daysWithoutGold++;                                                                      //increment the broke day counter
                     int daysRemaining = 3 - daysWithoutGold;                                               //calculate days remaining before game over
                     if (daysWithoutGold >= 3)                                                               //game over after 3 consecutive days without gold
                     {
                         PTAdventureLog.Log("The party has gone unpaid for 3 days and murdered you in your sleep! Game Over."); //log game over message
-                        gameOver = true;                                                                    //set game over flag — input stays active so 4 can reset
+                        gameOver = true;                                                                    //set game over flag
                         return;                                                                             //exit early
                     }
-                    PTAdventureLog.Log("WARNING: The party is broke! They are very unhappy about this. They have gone " + daysRemaining + " day(s) without pay!"); //log warning message
-                }
-                else
-                {
-                    daysWithoutGold = 0;                                                                    //reset broke counter if gold is restored
+                    PTAdventureLog.Log("WARNING: The party cannot be paid! They are very unhappy about this. " + daysRemaining + " day(s) until mutiny!"); //log warning message
                 }
 
                                                                                                             // Theft chance — higher odds and larger cut during the broke period
@@ -317,9 +319,17 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
                     PTAdventureLog.Log(theftMsg);                                                          //log theft message
                 }
 
+                if (daysElapsed % 7 == 0)                                                                       //every seventh day, award the weekly bonus commission
+                {
+                    ChangeGold(weeklyBonusCommission);                                                      //add weekly bonus commission
+                    PTAdventureLog.Log("A week has passed! The party earns a weekly bonus of " +
+                                       weeklyBonusCommission + " gold!");                                   //log weekly bonus message
+                }
+
                 SetSunIntensity(2f);
                 hasFought = false;                                                                          //reset hasFought for the new day
                 hasHealed = false;                                                                          //reset hasHealed for the new day
+                enemyCount = 0;                                                                              //reset enemy count for the new day
                 
                 dailyMsg = "Heil, " + partyName +                                                           //greet the party,
                           "! You have " + gold +                                                            //display the party gold
@@ -343,17 +353,20 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
         }
     }
 
-    public void OnE(InputAction.CallbackContext context)                                                    //Method to handle E key press, using new InputActions system
+    public void OnEncounter(InputAction.CallbackContext context)                                                    //Method to handle E key press, using new InputActions system
     {
         if (gameOver) return;                                                                               //block input after game over
         if (context.performed)
         {
             if (!hasFought)                                                                                 // Only allow one encounter per day
             {
-              int spawnCount = Random.Range(partyCount, (partyCount * 3) * GetAveragePartyLevel());         //random number of enemies to spawn, between party count and partycount * 3 * average party level, to scale difficulty as the party grows and levels up
+              float weekMultiplier = Mathf.Pow(1.5f, daysElapsed / 7);                                     //multiply enemy spawn by 1.5 for each week that has passed
+              int baseMin = Mathf.RoundToInt(partyCount * weekMultiplier);                                 //minimum spawn count scaled by week
+              int baseMax = Mathf.RoundToInt(partyCount * 3 * weekMultiplier);                             //maximum spawn count scaled by week
+              int spawnCount = Random.Range(baseMin, baseMax);                                             //random number of enemies to spawn, scaled by weekly multiplier
               enemyCount += spawnCount;                                                                        
               
-              if (enemyPrefab != null)                                                                      //Create enemy GameObjects from prefab after a null check
+              if (enemyPrefabs != null && enemyPrefabs.Length > 0)                                          //Create enemy GameObjects from prefab array after a null check
               {
                   Vector3 baseSpawnPosition = enemySpawnPoint != null ? 
                                               enemySpawnPoint.position : 
@@ -387,8 +400,24 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
                           if (validPosition)
                               break;
                       }
+
+                      GameObject randomEnemyPrefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];    //randomly select an enemy prefab from the array
+                      int avgLevel = GetAveragePartyLevel();                                                //get the current average party level
+
                       
-                      GameObject enemyObj = Instantiate(enemyPrefab, 
+                      if (randomEnemyPrefab.GetComponent<PTSoul>().level > avgLevel)                        // If the selected prefab is too strong, find a suitable one
+                      {
+                          List<GameObject> suitableEnemies = new List<GameObject>();                         //build a list of prefabs at or below average level
+                          foreach (GameObject prefab in enemyPrefabs)
+                          {
+                              if (prefab.GetComponent<PTSoul>().level <= avgLevel)
+                                  suitableEnemies.Add(prefab);
+                          }
+                          if (suitableEnemies.Count > 0)                                                    //pick a random suitable prefab if any exist
+                              randomEnemyPrefab = suitableEnemies[Random.Range(0, suitableEnemies.Count)];
+                      }
+
+                      GameObject enemyObj = Instantiate(randomEnemyPrefab, 
                                                         spawnPosition, 
                                                         Quaternion.identity, 
                                                         transform);                                         //instantiate enemy at random position as child of PTManager
@@ -404,7 +433,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
               hasFought = true;                                                                             //set hasFought to true for the day
               
               enemyMsg = "An enemy has appeared! There are now " + enemyCount + 
-                                  " " + adversaries[0].Type + "s to fight!";                                //sets the enemy message
+                                  " " + (adversaries.Count > 0 ? adversaries[0].Type : "enemy") + "s to fight!";                                //sets the enemy message
                 if (enemyCount > 0)                                                                         //check if there are enemies to fight            
                 {
                   canSleep = false;                                                                         //disable sleeping    
@@ -414,19 +443,19 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
 
                 UpdateUI();                                                                                 //update UI when enemies spawn
             }
-            else if (hasFought && enemyCount > 0)                                                           //check if the player has already fought for the day
+            if (hasFought && enemyCount > 0)                                                           //check if the player has already fought for the day
             {
                 PTAdventureLog.Log("You are already fighting an enemy!");                                   //log already fighting message
             }
-            if (hasFought && enemyCount <= 0)                                                               //check if the player has already fought and there are no enemies to fight
+            else if (hasFought && enemyCount <= 0)                                                               //check if the player has already fought and there are no enemies to fight
             {
-                PTAdventureLog.Log("You have already fought for the day," + 
-                                   "and there are no enemies to fight!");                                   //log already fought message
+                PTAdventureLog.Log("You have already fought for the day, " + 
+                                   "there are no enemies to fight!");                                   //log already fought message
             }
       } 
     }
 
-    public void OnAttack(InputAction.CallbackContext context)                                               //Method to handle attack key press
+    public void OnAttack(InputAction.CallbackContext context)                                               //Method to handle Left Click
     { 
       if (gameOver) return;                                                                               //block input after game over
       if (context.performed && adversaries.Count > 0)                                                       //check if attack key is pressed and there are enemies to fight
@@ -487,13 +516,13 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
           // Check if all enemies are defeated
           if (adversaries.Count == 0)
           {
-            ChangeGold(commision);                                                                          //add bonus commission for winning
+            ChangeGold(commission);                                                                         //add bonus commission for winning
             SetSunIntensity(0.1f);
             canSleep = true;                                                                                //enable sleeping
             enemyCount = 0;                                                                                 //reset enemy count
             
             PTAdventureLog.Log("You have defeated all the enemies! You can now sleep through the night.");  //log victory message
-            PTAdventureLog.Log("You earned a commision of " + commision + 
+            PTAdventureLog.Log("You earned a commission of " + commission + 
                                " gold! You have " + gold + " gold in total.");                              //log gold earned message
 
 
@@ -571,7 +600,7 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
       }
     }
 
-    public void On_1(InputAction.CallbackContext context)                                                   //method to handle 1 key press aka Healing
+    public void OnHeal(InputAction.CallbackContext context)                                                   //method to handle Q key press aka Healing
     {
       if (gameOver) return;                                                                               //block input after game over
       if (context.performed)
@@ -611,14 +640,14 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
         hasHealed = true;                                                                                   //set healing as used for the day
 
 
-        PTAdventureLog.Log("The Party has been Blessed! Healing recieved: " + totalHealed + " HP. Cost: " + healCost + " gold. Remaining gold: " + gold);
+        PTAdventureLog.Log("The Party has been Healed! Healing recieved: " + totalHealed + " HP. Cost: " + healCost + " gold. Remaining gold: " + gold);
 
 
         UpdateUI();                                                                                         //call update UI after healing (gold changed)
       }
     }
 
-    public void On_2(InputAction.CallbackContext context)                                                   //Method to pressing the 2 key to recruit a new party member
+    public void OnRecruit(InputAction.CallbackContext context)                                                   //Method to handle F key to recruit a new party member
     {
       if (gameOver) return;                                                                               //block input after game over
       if (context.performed)
@@ -641,22 +670,79 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
           return;
         }
 
+        int recruitCost = CalculateTotalDailyWages() / 2;                                                  //recruitment cost is half of total wages
+
+        bool hasCoward = false;                                                                              //check if any current party member is cowardly
+        foreach (PTSoul member in partyMembers)
+        {
+          if (member.isCowardly)
+          {
+            hasCoward = true;
+            break;
+          }
+        }
+        if (hasCoward)                                                                                      //if a cowardly soul exists, multiply cost by 1.5
+        {
+          recruitCost = Mathf.RoundToInt(recruitCost * 1.5f);
+          PTAdventureLog.Log("Cowardly members in the party have increased recruitment costs!");            //log cowardly surcharge
+        }
+
+        if (gold < recruitCost)                                                                              //check if party can afford recruitment
+        {
+          PTAdventureLog.Log("Not enough gold to recruit! You need " + recruitCost +
+                             " gold but only have " + gold + " gold.");                                    //log insufficient gold
+          return;
+        }
+
+        ChangeGold(-recruitCost);                                                                            //deduct recruitment cost
+        PTAdventureLog.Log("Recruitment cost: " + recruitCost + " gold. Remaining: " + gold + " gold."); //log recruitment cost
+
         GameObject randomPrefab = characterPrefabs[Random.Range(0, characterPrefabs.Length)];               // Select a random character prefab
         
         AddPartyMember(randomPrefab);                                                                       //call method, AddPartyMember
       }
     }
 
-    public void On_3(InputAction.CallbackContext context)                                                   //Method to handle 3 key press
+    public void OnRunAway(InputAction.CallbackContext context)                                                   //Method to handle R key press - Run from battle
     {
       if (gameOver) return;                                                                               //block input after game over
       if (context.performed)
       {
-        return;
+        if (adversaries.Count == 0)                                                                       //if not in combat, can't flee
+        {
+          PTAdventureLog.Log("There is no battle to run from!");                                          //log no battle message
+          return;
+        }
+
+        int fleeCost = Mathf.Max(1, Mathf.FloorToInt(gold * 0.1f));                                       //10% of current gold, minimum 1
+        ChangeGold(-fleeCost);                                                                             //deduct flee cost
+        PTAdventureLog.Log(partyName + " fled from battle! It cost " + fleeCost + " gold to escape.");    //log flee cost
+
+        foreach (PTSoul member in partyMembers)                                                           //mark all living party members as cowardly
+        {
+          if (member.isAlive)
+          {
+            member.isCowardly = true;                                                                     //mark as cowardly for fleeing
+          }
+        }
+        PTAdventureLog.Log("The party has been marked as Cowardly for running from battle!");             //log cowardly mark
+
+        for (int i = adversaries.Count - 1; i >= 0; i--)                                                  //destroy all enemies without gold reward
+        {
+          Destroy(adversaries[i].gameObject);                                                              //destroy enemy GameObject
+        }
+        adversaries.Clear();                                                                               //clear the adversaries list
+
+        canSleep = true;                                                                                   //enable sleeping
+        enemyCount = 0;                                                                                    //reset enemy count
+        SetSunIntensity(0.1f);                                                                             //dim the sun
+
+        PTAdventureLog.Log("You escaped the battle. No gold was looted and no commission was earned. You may now sleep but people in town are now wary of your cowardice!!"); //log post-flee summary
+        UpdateUI();                                                                                        //update UI after fleeing
       }
     }
 
-    public void OnReset(InputAction.CallbackContext context)                                                   //Method to handle reset key press - reloads the active scene
+    public void OnReset(InputAction.CallbackContext context)                                                   //Method to handle Escape key press - reloads the active scene
     {
       if (context.performed)
         {
@@ -664,6 +750,69 @@ public class PTManager : MonoBehaviour, SimpleControls.IPlayerActions           
             PTAdventureLog.Log("Restarting...");                                                            //log reset message
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);                               //reload the current scene, resetting all state
         }
+    }
+
+    public void On_1(InputAction.CallbackContext context)   //for blessing the Party
+    {
+        if (gameOver) return;                                                                               //block input after game over
+        if (context.performed)
+        {
+            if (adversaries.Count > 0)                                                                          //if enemies are present, prevent healing
+            {
+                PTAdventureLog.Log("You are not near the cleric, Go back to Town!");
+                return;
+            }
+
+        
+            if (hasBeenBlessed)                                                                                      //if already healed today
+            {
+                PTAdventureLog.Log("You have already recieved the blessings of the cleric this day!");
+                return;
+            }
+
+            int blessCost = partyMembers.Count * 100;                                                             // Calculate cost (100 gold per party member)
+
+            if (gold < blessCost)                                                                                //if the player cant afford blessings
+            {
+                PTAdventureLog.Log("The Cleric scoffs at your wealth! Come back with " + blessCost + 
+                             " gold to bless the party!!");
+                return;
+            }
+
+            ChangeGold(-blessCost);
+            foreach (PTSoul member in partyMembers)
+            {
+            member.Bless();
+            }
+
+            hasHealed = true;                                                                                   //set healing as used for the day
+
+
+            PTAdventureLog.Log("The Party has been Blessed!" + blessCost + " gold. Remaining gold: " + gold);
+
+
+            UpdateUI();                                                                                         //call update UI after healing (gold changed)
+        }
+    }
+
+    public void On_2(InputAction.CallbackContext context)
+    {
+        return;
+    }
+
+    public void On_3(InputAction.CallbackContext context)
+    {
+        return;
+    }
+
+    public void On_4(InputAction.CallbackContext context)
+    {
+        return;
+    }
+
+    public void On_5(InputAction.CallbackContext context)
+    {
+        return;
     }
     #endregion
 }

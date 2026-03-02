@@ -28,8 +28,7 @@ public class PTSoul : MonoBehaviour
     public int defense;                                                                             //integer for the defense stat of the soul
     public int dailywages = 20;                                                                     //integer for the daily wages of the soul
     public bool isAlive => currentHP > 0;                                                           //bool to check if the soul is alive
-
-
+    public bool isCowardly = false;                                                                   //bool to determine if the soul is cowardly, -could apply to enemies later
 
     [Header("Enemy Attributes")]                                                                    //Header for visiual seperation in the inspector
     public bool isAdversary = false;                                                                //bool to determine if the soul is an enemy or a party member, default is false for party members
@@ -61,11 +60,30 @@ public class PTSoul : MonoBehaviour
 
     public int Heal(int healAmount)                                 //method to heal the soul
     {
+        if (isCowardly)                                              //if the soul is cowardly, reduce healing by 30%
+        {
+            healAmount = Mathf.RoundToInt(healAmount * 0.7f);
+            PTAdventureLog.Log("The Cleric recognizes " + Name + "'s cowardice. 30% reduced healing for them.");
+        }
         int amountHealed = Mathf.Min(healAmount, maxHP - currentHP); // Calculate actual amount healed
         currentHP += amountHealed;
         if (currentHP > maxHP) currentHP = maxHP;                   // Ensure HP does not exceed max HP
         UpdateUI();                                                 // Update UI after healing
         return amountHealed;
+    }
+
+    public int Bless()                                 //method to fully heal the soul for extra money, but removes cowardly status if they have it
+    {
+        if (isCowardly)                                              
+        {
+            isCowardly = false;                                              //Remove cowardly status on blessing
+        }
+        int amountToHeal = Mathf.Min(maxHP - currentHP, maxHP); // Calculate actual amount to heal
+        currentHP += amountToHeal;
+        if (currentHP > maxHP) currentHP = maxHP;                   // Ensure HP does not exceed max HP
+        PTAdventureLog.Log(Name + " has been blessed by the priest and fully healed!"); // Log blessing event
+        UpdateUI();                                                 // Update UI after healing
+        return amountToHeal;
     }
 
     public void GainXP(int xpAmount)                                  //method to gain XP
@@ -87,10 +105,19 @@ public class PTSoul : MonoBehaviour
         currentXp = xpOverflow;                                      // Set current XP to the overflow amount
         xpToNextLevel = (level + 1) * 50;                            // Increase XP required for next level
         maxHP += 10;                                                 // Increase max HP on level up
-        attack += 2;                                                 // Increase attack on level up
-        defense += 2;                                                // Increase defense on level up
+        if (level < 5)
+        {
+            attack += 2;                                                 // Increase attack on level up, more at lower levels
+            defense += 2;                                                // Increase defense on level up, more at lower levels 
+        }
+        else
+        {
+            attack += 1;
+            defense += 1;
+        }
         currentHP = maxHP;                                           // Restore HP to max on level up
-        PTAdventureLog.Log(Name + " leveled up to level " + level + "!"); // Log level up event
+        dailywages = Mathf.RoundToInt(dailywages * 1.25f);           // Increase daily wages by 25% on level up
+        PTAdventureLog.Log(Name + " leveled up! Their Daily wages are now " + dailywages + " gold."); // Log level up event
     }
 
     public void UpdateUI()                                          //method to update all UI elements
@@ -99,7 +126,7 @@ public class PTSoul : MonoBehaviour
             nameText.text = Name;                                   // Update name text
         
         if (levelText != null)
-            levelText.text = "Lvl " + level.ToString();             // Update level text
+            levelText.text = level.ToString();             // Update level text
         
         if (healthText != null)
             healthText.text = currentHP + "/" + maxHP;              // Update health text

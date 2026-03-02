@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2325783892698259878}
   - component: {fileID: 3676624314260945167}
   m_Layer: 0
-  m_Name: Aura
+  m_Name: P_Aura
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,9 +28,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6114648068411336748}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.01518989, z: -0, w: 0.99988467}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0}
-  m_LocalScale: {x: 0.3096709, y: 0.9543834, z: 0.3170391}
+  m_LocalRotation: {x: 0, y: 0.015192511, z: 0, w: 0.9998846}
+  m_LocalPosition: {x: 0, y: 0.574, z: 0}
+  m_LocalScale: {x: 0.3096709, y: 1.0921963, z: 0.3170391}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2473096296674429573}
@@ -132,9 +132,11 @@ MonoBehaviour:
   nameText: {fileID: 3856737393954846993}
   healthText: {fileID: 9107673189843075454}
   healthSlider: {fileID: 4100663153029505610}
-  Name: Aura
-  Type: Faery
+  Name: Aurana
+  Type: Elf
   level: 1
+  currentXp: 0
+  xpToNextLevel: 0
   maxHP: 90
   currentHP: 90
   attack: 9
@@ -142,6 +144,7 @@ MonoBehaviour:
   dailywages: 15
   isAdversary: 0
   goldReward: 10
+  accumulatedLifeXp: 25
 --- !u!1001 &7510694049140404764
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -167,16 +170,28 @@ PrefabInstance:
       value: UI_Bars
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2.8801
+      objectReference: {fileID: 0}
+    - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.7062
+      objectReference: {fileID: 0}
+    - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.13
+      value: -0.171
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.827
+      value: 0.98
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.75
+      value: 0.749
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalRotation.w
@@ -205,6 +220,30 @@ PrefabInstance:
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225914896393157441, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225914896393157441, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 176.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225914896393157441, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 63.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755041311264574221, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_text
+      value: Aura
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755041311264574221, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_VerticalAlignment
+      value: 512
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755041311264574221, guid: e977f8e255bae82468cd307503430227, type: 3}
+      propertyPath: m_HorizontalAlignment
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

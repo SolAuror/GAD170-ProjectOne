@@ -395,7 +395,7 @@ GameObject:
   - component: {fileID: 811008425}
   m_Layer: 3
   m_Name: PartyOrb
-  m_TagString: EditorOnly
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -518,7 +518,7 @@ GameObject:
   - component: {fileID: 1590279420}
   m_Layer: 3
   m_Name: EnemyOrb
-  m_TagString: EditorOnly
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -714,6 +714,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 605392957750667769, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.24
+      objectReference: {fileID: 0}
+    - target: {fileID: 605392957750667769, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5.88
+      objectReference: {fileID: 0}
     - target: {fileID: 946038045678308394, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.86
@@ -790,9 +798,37 @@ PrefabInstance:
       propertyPath: partySpawnPoint
       value: 
       objectReference: {fileID: 811008428}
+    - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
+      propertyPath: enemyPrefabs.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 7052404560761537993, guid: 6f5192bbd792fa74f958ab8c679bd26b, type: 3}
+    - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[1]'
+      value: 
+      objectReference: {fileID: 7052404560761537993, guid: 7404cea803c0b5d41b605cda81360564, type: 3}
+    - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[2]'
+      value: 
+      objectReference: {fileID: 7052404560761537993, guid: 574874d194a4869458f329c974be2b46, type: 3}
+    - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[3]'
+      value: 
+      objectReference: {fileID: 7052404560761537993, guid: 765ac3200b2ee27498bb4d0c6924f438, type: 3}
+    - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
+      propertyPath: 'enemyPrefabs.Array.data[4]'
+      value: 
+      objectReference: {fileID: 7052404560761537993, guid: 14c2d05180965dd44b69c0b09a83b583, type: 3}
     - target: {fileID: 8345811722445232496, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
       propertyPath: m_Name
       value: ManagerOrb
+      objectReference: {fileID: 0}
+    - target: {fileID: 8345811722445232496, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
+      propertyPath: m_TagString
+      value: Untagged
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -887,6 +923,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2887167099148107868, guid: 9d7e77c277c8dec4a8d945807faf5912, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 3684119142586662888, guid: 9d7e77c277c8dec4a8d945807faf5912, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -926,6 +966,10 @@ PrefabInstance:
     - target: {fileID: 7998355486312908189, guid: 9d7e77c277c8dec4a8d945807faf5912, type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7998355486312908189, guid: 9d7e77c277c8dec4a8d945807faf5912, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -0.0006478652
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
