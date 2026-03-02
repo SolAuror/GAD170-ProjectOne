@@ -79,7 +79,8 @@ public class PTSoul : MonoBehaviour
     }
 
     public void LevelUp()                                            //method to handle leveling up
-    {   int xpOverflow;
+    {   
+        int xpOverflow;
         level++;
         accumulatedLifeXp += currentXp;                              // Increase accumulated life XP by the currently held XP before it resets to 0.
         xpOverflow = currentXp - xpToNextLevel;                      // Calculate XP overflow after leveling up
@@ -89,6 +90,7 @@ public class PTSoul : MonoBehaviour
         attack += 2;                                                 // Increase attack on level up
         defense += 2;                                                // Increase defense on level up
         currentHP = maxHP;                                           // Restore HP to max on level up
+        PTAdventureLog.Log(Name + " leveled up to level " + level + "!"); // Log level up event
     }
 
     public void UpdateUI()                                          //method to update all UI elements
