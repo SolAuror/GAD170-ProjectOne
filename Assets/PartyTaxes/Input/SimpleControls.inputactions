@@ -61,7 +61,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "4",
+                    "name": "Reset",
                     "type": "Button",
                     "id": "db3a619a-0898-4f23-a462-03fa1d9076f3",
                     "expectedControlType": "",
@@ -184,11 +184,11 @@
                 {
                     "name": "",
                     "id": "03b85c4d-81ff-49a1-8d50-7f7b04bf78d5",
-                    "path": "<Keyboard>/4",
+                    "path": "<Keyboard>/r",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "4",
+                    "action": "Reset",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -199,7 +199,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "4",
+                    "action": "Reset",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

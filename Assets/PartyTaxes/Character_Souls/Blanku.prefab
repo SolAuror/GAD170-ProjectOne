@@ -135,6 +135,8 @@ MonoBehaviour:
   Name: Blanku
   Type: Human
   level: 1
+  currentXp: 0
+  xpToNextLevel: 0
   maxHP: 80
   currentHP: 80
   attack: 8
@@ -142,6 +144,7 @@ MonoBehaviour:
   dailywages: 10
   isAdversary: 0
   goldReward: 10
+  accumulatedLifeXp: 25
 --- !u!1001 &5363446496051992598
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -172,7 +175,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.785
+      value: 0.812
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.z

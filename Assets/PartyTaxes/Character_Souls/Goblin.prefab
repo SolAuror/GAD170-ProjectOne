@@ -137,6 +137,8 @@ MonoBehaviour:
   Name: 
   Type: Goblin
   level: 1
+  currentXp: 0
+  xpToNextLevel: 0
   maxHP: 20
   currentHP: 20
   attack: 5
@@ -144,6 +146,7 @@ MonoBehaviour:
   dailywages: 0
   isAdversary: 1
   goldReward: 1
+  accumulatedLifeXp: 25
 --- !u!1001 &6922399244095160488
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -170,27 +173,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.2925546
+      value: 1.9552473
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.8433558
+      value: 2.7884443
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.1503
+      value: 1.7400588
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.053828
+      value: -0.086
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.5141
+      value: 1.807
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.73731
+      value: 1.1545
       objectReference: {fileID: 0}
     - target: {fileID: 5361935076864719001, guid: e977f8e255bae82468cd307503430227, type: 3}
       propertyPath: m_LocalRotation.w
