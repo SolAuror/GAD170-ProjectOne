@@ -29,6 +29,7 @@ public class PTSoul : MonoBehaviour
     public int dailywages = 20;                                                                     //integer for the daily wages of the soul
     public bool isAlive => currentHP > 0;                                                           //bool to check if the soul is alive
     public bool isCowardly = false;                                                                   //bool to determine if the soul is cowardly, -could apply to enemies later
+    public bool markedByDeath = false;                                                              //bool to track if character was resurrected, suffers stat penalties and cannot become cowardly
 
     [Header("Enemy Attributes")]                                                                    //Header for visiual seperation in the inspector
     public bool isAdversary = false;                                                                //bool to determine if the soul is an enemy or a party member, default is false for party members
@@ -52,7 +53,7 @@ public class PTSoul : MonoBehaviour
 
     public int TakeDamage(int damage)                               //method to apply damage taken
     {
-        currentHP -= damage;                                        // Subtract damage from current HP                                  
+        currentHP -= Mathf.Max(damage - defense, 0);                            // Reduce damage by defense, but ensure it does not heal the soul                                  
         if (currentHP < 0) currentHP = 0;                           // Ensure HP does not go below 0
         UpdateUI();                                                 // Update UI after taking damage
         return damage;
@@ -105,19 +106,17 @@ public class PTSoul : MonoBehaviour
         currentXp = xpOverflow;                                      // Set current XP to the overflow amount
         xpToNextLevel = (level + 1) * 50;                            // Increase XP required for next level
         maxHP += 10;                                                 // Increase max HP on level up
-        if (level < 5)
-        {
-            attack += 2;                                                 // Increase attack on level up, more at lower levels
-            defense += 2;                                                // Increase defense on level up, more at lower levels 
-        }
-        else
+        if (level % 2 == 0)                                          // Every 2 levels, increase attack and defense
         {
             attack += 1;
             defense += 1;
         }
-        currentHP = maxHP;                                           // Restore HP to max on level up
+        currentHP += 10;                                           // Restore HP to max on level up
         dailywages = Mathf.RoundToInt(dailywages * 1.25f);           // Increase daily wages by 25% on level up
+        if(!isAdversary)
+        {
         PTAdventureLog.Log(Name + " leveled up! Their Daily wages are now " + dailywages + " gold."); // Log level up event
+        }
     }
 
     public void UpdateUI()                                          //method to update all UI elements

@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 671141676673460671}
   serializedVersion: 2
   m_LocalRotation: {x: 0.12849408, y: -0, z: -0, w: 0.9917103}
-  m_LocalPosition: {x: 0.8, y: 1.48, z: -5.61}
+  m_LocalPosition: {x: 0.8, y: 1.24, z: -5.88}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -147,6 +147,7 @@ GameObject:
   m_Component:
   - component: {fileID: 946038045678308394}
   - component: {fileID: 7311857654459855411}
+  - component: {fileID: 5142946628887362786}
   - component: {fileID: 8893607427165191118}
   m_Layer: 0
   m_Name: ManagementPrefab
@@ -184,31 +185,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7830923bb2b949e46b69de0638e5f2e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PTManager
+  debugMode: 0
   characterPrefabs:
-  - {fileID: 8228564972084607831, guid: 6afe3252129d44748b58ec24c681568b, type: 3}
-  - {fileID: 7629752157938402664, guid: 25bc647dab84e58409416c11efb7879e, type: 3}
-  - {fileID: 6114648068411336748, guid: 0de0dd72bcd73e945a7cfe2df63b0ed9, type: 3}
-  - {fileID: 8183285708965617602, guid: e35410bb5b33ef74e93f48a0a41653cc, type: 3}
-  - {fileID: 8228564972084607831, guid: 98ef7774f5a690b449df6eebcf209385, type: 3}
-  enemyPrefab: {fileID: 7052404560761537993, guid: 6f5192bbd792fa74f958ab8c679bd26b, type: 3}
+  - {fileID: 9143179508571656290, guid: 9d1ee1cbcfbab2f4ca912ae7d46951b0, type: 3}
+  - {fileID: 5731961294990567019, guid: 90666a4e56f4a494c88f55552963fdc4, type: 3}
+  - {fileID: 1743201508792565126, guid: 414e727ac9b937d478ee50970efc309e, type: 3}
+  - {fileID: 6838328041479926517, guid: eb683d136dea54c4ab8d3295106732d0, type: 3}
+  - {fileID: 962645080951490870, guid: f157e88305a93d242a8aa0a9317a385e, type: 3}
+  enemyPrefabs:
+  - {fileID: 2846588810715049013, guid: 6f5192bbd792fa74f958ab8c679bd26b, type: 3}
+  - {fileID: 9142768517407657369, guid: 7404cea803c0b5d41b605cda81360564, type: 3}
+  - {fileID: 5247318686874315860, guid: 16365c82696e67f43aaef65387abefe7, type: 3}
+  - {fileID: 5892962939690307855, guid: 765ac3200b2ee27498bb4d0c6924f438, type: 3}
+  - {fileID: 4205500498087268125, guid: 802a7cd8e2070e542a4e8ea8617c1edb, type: 3}
   partySpawnPoint: {fileID: 0}
   enemySpawnPoint: {fileID: 0}
   partyMembers: []
   adversaries: []
-  enemyCount: 0
-  totalEnemies: 0
   gold: 90
-  commision: 50
+  commission: 50
+  weeklyBonusCommission: 50
   totalWages: 0
   daysElapsed: 0
-  partyCount: 0
   maxPartyCount: 4
   BGMusic: {fileID: 8300000, guid: 5491d3f8255ecf547a924121840c6bc1, type: 3}
-  AtkSound: {fileID: 0}
-  SleepSound: {fileID: 0}
+  goldSound: {fileID: 8300000, guid: 03fe0cf4a2358ba4d8a1950ae44bb2b8, type: 3}
+  Sun: {fileID: 0}
+  partyName: The Adventurers
   battleText: {fileID: 0}
   goldText: {fileID: 0}
-  partyName: The Adventurers
+  dayText: {fileID: 0}
+  PartyNameText: {fileID: 0}
+  controlsText: {fileID: 0}
   dailyMsg: 
   enemyMsg: 
   sleepMsgs:
@@ -218,6 +226,64 @@ MonoBehaviour:
   canSleep: 1
   hasFought: 0
   hasHealed: 0
+  hasBeenBlessed: 0
+  gameOver: 0
+  daysWithoutGold: 0
+--- !u!114 &5142946628887362786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3587553301624321769}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97c981388f14f134fadc10bdac89aee8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PTRecruitGenerator
+  namePrefixes:
+  - Brave
+  - Bold
+  - Swift
+  - Mighty
+  - Clever
+  - Noble
+  - Shadow
+  - Iron
+  - Wise
+  - Wild
+  nameSuffixes:
+  - heart
+  - blade
+  - fist
+  - shield
+  - soul
+  - walker
+  - runner
+  - striker
+  - forge
+  - wind
+  fullNames:
+  - Salen
+  - Loneth
+  - Dran
+  - Fayn
+  - Conti
+  - Gilaine
+  - Goro
+  - Horus
+  - Hester
+  - Juli
+  characterTypes:
+  - Human
+  - Elf
+  - Dwarf
+  - Halfling
+  - Faery
+  hpRange: {x: 50, y: 100}
+  attackRange: {x: 8, y: 15}
+  defenseRange: {x: 5, y: 12}
+  wageRange: {x: 15, y: 30}
 --- !u!82 &8893607427165191118
 AudioSource:
   m_ObjectHideFlags: 0
@@ -328,8 +394,8 @@ GameObject:
   - component: {fileID: 8299154003470177272}
   - component: {fileID: 7884901226663757931}
   m_Layer: 3
-  m_Name: Sphere
-  m_TagString: EditorOnly
+  m_Name: ManagerOrb
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -156,7 +156,7 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""1"",
+                    ""name"": ""Bless"",
                     ""type"": ""Button"",
                     ""id"": ""2e56b095-6e63-44dd-9bda-c7667501db3d"",
                     ""expectedControlType"": """",
@@ -174,7 +174,7 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""3"",
+                    ""name"": ""Resurrect"",
                     ""type"": ""Button"",
                     ""id"": ""a103f2e9-3f80-45c3-a068-195774074949"",
                     ""expectedControlType"": """",
@@ -418,7 +418,7 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
-                    ""action"": ""1"",
+                    ""action"": ""Bless"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -429,7 +429,7 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
-                    ""action"": ""1"",
+                    ""action"": ""Bless"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -462,7 +462,7 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
-                    ""action"": ""3"",
+                    ""action"": ""Resurrect"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -473,7 +473,7 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
-                    ""action"": ""3"",
+                    ""action"": ""Resurrect"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -1112,9 +1112,9 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
         m_Player_Recruit = m_Player.FindAction("Recruit", throwIfNotFound: true);
         m_Player_RunAway = m_Player.FindAction("Run Away", throwIfNotFound: true);
         m_Player_Reset = m_Player.FindAction("Reset", throwIfNotFound: true);
-        m_Player__1 = m_Player.FindAction("1", throwIfNotFound: true);
+        m_Player_Bless = m_Player.FindAction("Bless", throwIfNotFound: true);
         m_Player__2 = m_Player.FindAction("2", throwIfNotFound: true);
-        m_Player__3 = m_Player.FindAction("3", throwIfNotFound: true);
+        m_Player_Resurrect = m_Player.FindAction("Resurrect", throwIfNotFound: true);
         m_Player__4 = m_Player.FindAction("4", throwIfNotFound: true);
         m_Player__5 = m_Player.FindAction("5", throwIfNotFound: true);
         // UI
@@ -1217,9 +1217,9 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Recruit;
     private readonly InputAction m_Player_RunAway;
     private readonly InputAction m_Player_Reset;
-    private readonly InputAction m_Player__1;
+    private readonly InputAction m_Player_Bless;
     private readonly InputAction m_Player__2;
-    private readonly InputAction m_Player__3;
+    private readonly InputAction m_Player_Resurrect;
     private readonly InputAction m_Player__4;
     private readonly InputAction m_Player__5;
     /// <summary>
@@ -1262,17 +1262,17 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Reset => m_Wrapper.m_Player_Reset;
         /// <summary>
-        /// Provides access to the underlying input action "Player/_1".
+        /// Provides access to the underlying input action "Player/Bless".
         /// </summary>
-        public InputAction @_1 => m_Wrapper.m_Player__1;
+        public InputAction @Bless => m_Wrapper.m_Player_Bless;
         /// <summary>
         /// Provides access to the underlying input action "Player/_2".
         /// </summary>
         public InputAction @_2 => m_Wrapper.m_Player__2;
         /// <summary>
-        /// Provides access to the underlying input action "Player/_3".
+        /// Provides access to the underlying input action "Player/Resurrect".
         /// </summary>
-        public InputAction @_3 => m_Wrapper.m_Player__3;
+        public InputAction @Resurrect => m_Wrapper.m_Player_Resurrect;
         /// <summary>
         /// Provides access to the underlying input action "Player/_4".
         /// </summary>
@@ -1328,15 +1328,15 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
             @Reset.started += instance.OnReset;
             @Reset.performed += instance.OnReset;
             @Reset.canceled += instance.OnReset;
-            @_1.started += instance.On_1;
-            @_1.performed += instance.On_1;
-            @_1.canceled += instance.On_1;
+            @Bless.started += instance.OnBless;
+            @Bless.performed += instance.OnBless;
+            @Bless.canceled += instance.OnBless;
             @_2.started += instance.On_2;
             @_2.performed += instance.On_2;
             @_2.canceled += instance.On_2;
-            @_3.started += instance.On_3;
-            @_3.performed += instance.On_3;
-            @_3.canceled += instance.On_3;
+            @Resurrect.started += instance.OnResurrect;
+            @Resurrect.performed += instance.OnResurrect;
+            @Resurrect.canceled += instance.OnResurrect;
             @_4.started += instance.On_4;
             @_4.performed += instance.On_4;
             @_4.canceled += instance.On_4;
@@ -1375,15 +1375,15 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
             @Reset.started -= instance.OnReset;
             @Reset.performed -= instance.OnReset;
             @Reset.canceled -= instance.OnReset;
-            @_1.started -= instance.On_1;
-            @_1.performed -= instance.On_1;
-            @_1.canceled -= instance.On_1;
+            @Bless.started -= instance.OnBless;
+            @Bless.performed -= instance.OnBless;
+            @Bless.canceled -= instance.OnBless;
             @_2.started -= instance.On_2;
             @_2.performed -= instance.On_2;
             @_2.canceled -= instance.On_2;
-            @_3.started -= instance.On_3;
-            @_3.performed -= instance.On_3;
-            @_3.canceled -= instance.On_3;
+            @Resurrect.started -= instance.OnResurrect;
+            @Resurrect.performed -= instance.OnResurrect;
+            @Resurrect.canceled -= instance.OnResurrect;
             @_4.started -= instance.On_4;
             @_4.performed -= instance.On_4;
             @_4.canceled -= instance.On_4;
@@ -1740,12 +1740,12 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnReset(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "1" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Bless" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void On_1(InputAction.CallbackContext context);
+        void OnBless(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "2" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -1754,12 +1754,12 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void On_2(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "3" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Resurrect" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void On_3(InputAction.CallbackContext context);
+        void OnResurrect(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "4" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 public class PTAdventureLog : MonoBehaviour
 {
@@ -22,11 +23,13 @@ public class PTAdventureLog : MonoBehaviour
     private readonly List<string> logEntries = new List<string>();                         // Store raw log files in a readonly list of strings.        -Could be used for a potential future saving/loading system. 
     private readonly List<TextMeshProUGUI> visualEntries = new List<TextMeshProUGUI>();    //store visual log entries in a readonly list of TextMeshProUGUI objects.
     private TextMeshProUGUI entryTemplate;
+    private static PTAdventureLog _instance;                                               //cached singleton instance to avoid FindFirstObjectByType every call
 #endregion
 
 #region Initialization
     void Awake()                                                                          //on awake, initialize the adventure log panel before other scripts' Start() runs
     {
+        _instance = this;                                                                   //cache singleton instance
         if (logScrollRect != null && logContent != null)
         {
             logScrollRect.content = logContent;
@@ -59,9 +62,48 @@ public class PTAdventureLog : MonoBehaviour
 #endregion
 
 #region Log Management Methods
+    private string ColorizeMessage(string message)                             //method to automatically colorize gold and HP amounts in messages
+    {
+        if (string.IsNullOrEmpty(message)) return message;
+
+        // Colourize gold amounts
+        message = Regex.Replace(message, @"(\d+)\s*(gold)", "<color=#FFD700>$1 $2</color>", RegexOptions.IgnoreCase);
+        
+        // Colourize daily wages amount
+        message = Regex.Replace(message, @"(Daily Wages are\s+)(\d+)", "$1<color=#FFD700>$2</color>", RegexOptions.IgnoreCase);
+
+        // Colourize HP amounts
+        message = Regex.Replace(message, @"(\d+(?:/\d+)?)\s*(HP)", "<color=#00FF00>$1 $2</color>", RegexOptions.IgnoreCase);
+
+        message = Regex.Replace(message, @"(healing|healed|heal|life|cleric)", "<color=#00FF00>$1</color>", RegexOptions.IgnoreCase);
+
+        //colourize party name markers
+        message = Regex.Replace(message, @"<partyname>(.*?)</partyname>", "<color=#31FFFD>$1</color>");
+
+        //colourize party member join messages
+        message = Regex.Replace(message, @"^(.+?)\s+joined\s+(.+?)!$", "<color=#31FFFD>$1</color> joined <color=#31FFFD>$2</color>!", RegexOptions.IgnoreCase);
+
+        //colourize resurrection messages
+        message = Regex.Replace(message, @"\b(resurrected|resurrection|resurrect)\b", "<color=purple>$1</color>", RegexOptions.IgnoreCase);
+
+        message = Regex.Replace(message, @"\b(coward|cowardly|Cowardice|run away)\b", "<color=#C57A00>$1</color>", RegexOptions.IgnoreCase);
+
+        //colourize enemy name markers
+        message = Regex.Replace(message, @"(\d+\s)?<enemy>(.*?)</enemy>(s?)", "<color=#DC143C>$1$2$3</color>", RegexOptions.IgnoreCase);
+
+        //colourize death messages
+        message = Regex.Replace(message, @"\bMysterious Stranger\b", "<color=purple>$0</color>", RegexOptions.IgnoreCase);
+        message = Regex.Replace(message, @"\bMarked by Death\b", "<color=purple>$0</color>", RegexOptions.IgnoreCase);
+        message = Regex.Replace(message, @"The Dark Ritual Begins\.\.\.", "<color=purple>$0</color>", RegexOptions.IgnoreCase);
+        message = Regex.Replace(message, @"\b(dead|died|death)\b", "<color=purple>$1</color>", RegexOptions.IgnoreCase);
+        return message;
+    }
+
     public void AddLogEntry(string message)                                    //method for adding a log entry, take a string message as input 
     {                                                                           
-        if (string.IsNullOrEmpty(message)) return;                             
+        if (string.IsNullOrEmpty(message)) return;
+
+        message = ColorizeMessage(message);                                     //automatically colorize gold and HP amounts
 
         bool shouldAutoScroll = !autoScrollWhenNearBottom || IsNearBottom();
         
@@ -169,15 +211,15 @@ public class PTAdventureLog : MonoBehaviour
         UpdateLogDisplay();
     }
 #endregion
-    public static void ClearLog()                                                //Static method for clearing the log, finds the instance and delegates to ClearLogInstance()
+    public static void ClearLog()                                                //Static method for clearing the log, uses cached instance
     {
-        PTAdventureLog logger = FindFirstObjectByType<PTAdventureLog>();
+        PTAdventureLog logger = _instance != null ? _instance : FindFirstObjectByType<PTAdventureLog>();
         if (logger != null) logger.ClearLogInstance();
     }
 
-    public static void Log(string message)                                                    //Static Method for logging messages to the adventure log,
-    {                                                                                         //(NOTE TO SELF: this can be referenced from other scripts without a rerference to this component because it finds the first instance of          
-        PTAdventureLog logger = FindFirstObjectByType<PTAdventureLog>();                      //this component in the scene and calls the AddLogEntry method on it)
+    public static void Log(string message)                                                    //Static Method for logging messages to the adventure log, uses cached instance
+    {                                                                                         
+        PTAdventureLog logger = _instance != null ? _instance : FindFirstObjectByType<PTAdventureLog>();
         if (logger != null)
         {
             logger.AddLogEntry(message);
