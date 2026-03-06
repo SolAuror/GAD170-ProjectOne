@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f33d0ae4169a0f842a7f904b9bd6a590, type: 3}
+  m_Name: SoulType_Elf
+  m_EditorClassIdentifier: Assembly-CSharp::PartyTaxes.PTSoulTypeData
+  typeName: Elf
+  isAdversary: 0
+  names:
+  - Aelar
+  - Theren
+  - Lathlaeril
+  - Sylvaris
+  - Eldarin
+  - Althir
+  - Loriel
+  - Elowen
+  - Caelith
+  - Thalorien
+  - Sylthas
+  - Vaelith
+  - Aurana
+  - Lunarys
+  - Ithilon
+  mightRange: {x: 1, y: 4}
+  agilityRange: {x: 3, y: 7}
+  constitutionRange: {x: 1, y: 4}
+  senseRange: {x: 3, y: 7}
+  luckRange: {x: 2, y: 6}
+  wageRange: {x: 12, y: 18}
+  levelRange: {x: 0, y: 0}
+  goldRewardRange: {x: 5, y: 10}
+  lifeXpRange: {x: 0, y: 0}
+  bonusMightPerLevel: 0
+  bonusAgilityPerLevel: 0
+  bonusConstitutionPerLevel: 0
+  bonusSensePerLevel: 0
+  bonusLuckPerLevel: 0

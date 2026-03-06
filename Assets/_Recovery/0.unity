@@ -769,10 +769,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Management
       objectReference: {fileID: 0}
-    - target: {fileID: 4131468754062915729, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
-      propertyPath: prefixChance
-      value: 0.15
-      objectReference: {fileID: 0}
     - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
       propertyPath: Sun
       value: 
@@ -802,21 +798,9 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1590279419}
     - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
-      propertyPath: partyBasePrefab
-      value: 
-      objectReference: {fileID: 9143179508571656290, guid: 9d1ee1cbcfbab2f4ca912ae7d46951b0, type: 3}
-    - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
       propertyPath: partySpawnPoint
       value: 
       objectReference: {fileID: 811008428}
-    - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
-      propertyPath: characterPrefabs.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7311857654459855411, guid: 71784b42eadddef45927f2d56abf8c2f, type: 3}
-      propertyPath: 'characterPrefabs.Array.data[0]'
-      value: 
-      objectReference: {fileID: 9143179508571656290, guid: 9d1ee1cbcfbab2f4ca912ae7d46951b0, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

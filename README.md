@@ -10,6 +10,20 @@
 
 ---------------------------------------------------------------------------------------
 
+## 📋 Table of Contents
+
+- [Controls](#controls)
+- [Gameplay Systems](#gameplay-systems)
+- [Game Over Conditions](#game-over-conditions)
+- [Script Architecture](#script-architecture)
+- [Complete Method Breakdown](#-complete-method-breakdown-laymans-terms)
+- [Key Gameplay Flows](#key-gameplay-flows)
+- [Balance Constants](#balance-constants-ptmanagercs)
+- [Design Patterns & Architecture](#design-patterns--architecture-decisions)
+- [Implementation Notes](#implementation-notes)
+
+---------------------------------------------------------------------------------------
+
 ## Controls
 
 ### Town
@@ -87,8 +101,8 @@ The central game controller. Owns all shared state (gold, party list, enemy list
 ### `PTSoul`
 Represents a single character — party member or enemy. Owns stats (HP, attack, defense, level, XP, wages) and status flags (`isCowardly`, `markedByDeath`, `isAdversary`). Handles its own damage, healing, blessing, XP, and level-up logic, and drives its own UI elements (name, health bar, XP bar). `PTManager` holds lists of `PTSoul` instances and calls into them to run gameplay.
 
-### `PTRecruitGenerator`
-Fallback recruit factory used when all named adventurer prefabs have been exhausted. Generates random names from configurable prefix/suffix pools, randomizes stats within inspector-set ranges, and scales those stats by level. Called by `PTManager.Town` during recruitment.
+### `PTSoulGen`
+Centralized character generation system that creates both party members and enemies. Uses ScriptableObject data assets (PTSoulTypeData) to define races with configurable attribute ranges, level brackets, and rewards. Handles name generation with optional prefixes ("Mighty Salen the Dwarf"), stat randomization, and smart enemy scaling based on party level.
 
 ### `PTAdventureLog`
 Singleton scrollable narrative log. Any script calls `PTAdventureLog.Log(message)` to append a rich-text entry. Handles auto-scrolling, entry count limits, and custom color tags for enemies (`<enemy>`), party names (`<partyname>`), etc.
@@ -96,23 +110,297 @@ Singleton scrollable narrative log. Any script calls `PTAdventureLog.Log(message
 ### `DeadCharacterData`
 Serializable snapshot class defined alongside `PTManager`. Captures a fallen `PTSoul`'s name, stats, and original prefab reference at the moment of death. Used exclusively by the resurrection system to restore the character with a configurable stat penalty.
 
+### `PTSoulTypeData` (ScriptableObject)
+Configuration asset for each race/creature type (Human, Elf, Goblin, etc.). Defines attribute ranges, spawn level brackets, name pools, gold/XP rewards, wage ranges, and per-level scaling bonuses. Supports both friendly (party member) and adversary (enemy) types.
+
+### `PTSoulPrefix` (Data Class)
+Defines stat-modifying prefixes like "Mighty" (+3 Might), "Feeble" (-2 Might), etc. Applied randomly during character generation with a 35% default chance. Each prefix targets one of the five attributes and applies a modifier clamped between -2 and +3.
+
 ---------------------------------------------------------------------------------------
 
-## Extra stuff
+## 📚 Complete Method Breakdown (Layman's Terms)
 
-- **Debug Mode:** If enabled, prints extra debug messages to the console.
-- **Gold never goes negative:** All deductions clamp at zero.
-- **Resurrection prefab fallback:** If the original prefab for a dead character cannot be found, the first prefab in the array is used.
-- **Dynamic UI controls:** The controls display updates based on context (town/combat).
-- **Sun intensity changes:** The sun's intensity changes when sleeping or after combat.
-- **Party formation:** Members are repositioned and rotated to maintain formation when new members are added.
-- **Randomized sleep messages:** Sleep messages are randomized each night.
-- **Weekly bonus:** Every 7 days, a gold bonus is awarded.
-- **Adventure log formatting:** All major actions and events are logged with rich text formatting, including color tags.
-- **Cowardly status:** Resurrected members cannot become Cowardly; normal members can after fleeing or healing/blessing.
-- **Recruitment cost:** Increased by 50% if any party member is Cowardly.
-- **Healing/Blessing:** Only available once per day each; Cowardly members get 30% reduced healing.
-- **Level up to party average:** New recruits are leveled up to match the average level of the existing party (excluding themselves).
-- **Game over triggers:** Mutiny after 3 consecutive unpaid days; total party wipe triggers game over immediately.
-- **Audio feedback:** Gold changes play a sound effect if assigned.
-- **DeadCharacterData:** Stores full stat snapshot for resurrection, including prefab reference and fallback.
+### **PTSoul.cs** — Individual Character
+
+**Combat Methods:**
+- `DealDamage()` — Rolls the dice for an attack, checks for critical hits, calculates damage output
+- `TakeDamage(int damage)` — Reduces incoming damage based on defense (diminishing returns), subtracts from health
+- `WasCrit` — Simple yes/no check: was the last attack a critical hit?
+
+**Healing Methods:**
+- `Heal(int healAmount)` — Restores health points; cowards get 30% less healing due to shame
+- `Bless()` — Premium healing that fully restores HP AND removes coward status
+
+**Character Growth:**
+- `GainXP(int xpAmount)` — Adds experience points, automatically triggers level-up if threshold reached
+- `LevelUp()` — Increases level, grants 1 attribute point, raises wages by 25%, heals partially
+- `ChangeAttribute(string attributeName, int amount)` — Increases/decreases specific stat, recalculates derived combat values
+- `RecalculateStats()` — Converts 5 base attributes into HP, attack, defense, crit chance, crit multiplier
+
+**UI Methods:**
+- `UpdateUI()` — Refreshes all on-screen displays: name, health bar, XP bar, level number
+
+---
+
+### **PTManager.cs** — Main Game Controller
+
+**Core Systems:**
+- `CalculateTotalDailyWages()` — Adds up how much gold the entire party demands each day
+- `ChangeGold(int amount)` — Adds/removes gold, plays coin sound, updates UI, clamps at zero
+- `ChangeXP(int xpAmount, string source)` — Splits XP equally among all living party members
+
+**UI & Display:**
+- `UpdateUI()` — Updates gold display (red when broke), day counter, battle status, party name
+- `UpdateControlsDisplay()` — Shows context-sensitive keyboard controls (different in town vs combat)
+- `SetSunIntensity(float intensity)` — Makes the sun brighter (daytime) or darker (nighttime)
+
+**Game States:**
+- `TriggerGameOver(string message)` — Ends the game and displays death message
+
+---
+
+### **PTManager.Party.cs** — Party Formation & Recruitment
+
+**Formation System:**
+- `GetNextPartyMemberTransform(out Quaternion rotation)` — Repositions all party members in neat horizontal line, returns next available slot position
+
+**Member Management:**
+- `SpawnRandomPartyMember()` — Creates new character with random stats/race, adds to party, auto-levels to match team
+- `RemovePartyMember(PTSoul member)` — Removes from party list, saves data for resurrection, destroys game object
+- `LevelUpToPartyAverage(PTSoul newMember)` — New recruits instantly level up to match party's average level
+
+**Utility:**
+- `GetAveragePartyLevel()` — Calculates team power by averaging all member levels
+
+---
+
+### **PTManager.Town.cs** — Town Activities
+
+**Helper:**
+- `CanPerformTownAction()` — Safety check that prevents town actions during combat
+
+**Daily Cycle:**
+- `OnSleep()` — **(Spacebar)** Advances to next day, pays wages, checks for theft, awards weekly bonuses, resets daily action flags
+
+**Services:**
+- `OnHeal()` — **(Q key)** Costs 10 gold per member, heals everyone for 50 HP, once per day
+- `OnBless()` — **(1 key)** Costs 100 gold per member, fully heals + removes coward status, once per day
+- `OnRecruit()` — **(F key)** Costs half of daily wages (more with cowards), spawns random character
+- `OnResurrect()` — **(3 key)** Unlocks day 7+, costs 100 gold + wages, revives random dead character at 90% stats with "Marked by Death"
+- `OnReset()` — **(Escape key)** Reloads entire scene from scratch
+
+---
+
+### **PTManager.Combat.cs** — Battle System
+
+**Enemy Spawning:**
+- `OnEncounter()` — **(E key)** Spawns 2-6+ enemies (scaled to party size + days), prevents sleeping, starts turn-based combat
+
+**Turn Queue System:**
+- `StartCombat()` — Clears old combat data, announces battle start, begins first round
+- `ResetCombatState()` — Clears all turn queues and tracking when battle ends
+- `StartRound()` — Sorts everyone by Sense stat, compares averages to determine who goes first
+- `AdvancePartyTurn()` — Goes through party one by one, waits for player to press Attack for each
+- `RunEnemyPhase()` — All enemies attack automatically in order of highest Sense, no player input
+
+**Attack Processing:**
+- `ProcessPartyAttack(PTSoul attacker)` — Your character attacks random enemy, rolls damage, awards gold/XP if kill
+- `ProcessEnemyAttack(PTSoul enemyAttacker)` — Enemy attacks random party member, gives enemies XP if they kill someone
+
+**Victory/Defeat:**
+- `OnAllEnemiesDefeated()` — Awards commission gold, enables sleeping, returns to town
+- `OnAttack()` — **(Left Click)** Executes active party member's attack when it's their turn
+
+**Escape System:**
+- `OnRunAway()` — **(R key)** Costs 10% gold, each member rolls escape chance based on agility vs enemy agility, escapees become cowards
+
+---
+
+### **PTAdventureLog.cs** — Combat Log System
+
+**Display Management:**
+- `AddLogEntry(string message)` — Posts timestamped message, auto-colorizes keywords, scrolls to bottom, limits to 20 entries
+- `ColorizeMessage(string message)` — Scans text for keywords (gold, HP, enemy, coward, death) and wraps in color tags
+- `UpdateLogDisplay()` — Rebuilds entire log display when using single text mode
+- `AddVisualEntry()` — Spawns new text object for multi-entry layout mode
+- `RebuildLayout()` — Forces Unity to recalculate scroll box size, handles auto-scrolling
+- `IsNearBottom()` — Checks if scroll position is within 10% of bottom
+
+**Utility:**
+- `ClearLog()` — **Static method** - Wipes all log entries
+- `Log(string message)` — **Static method** - Public interface for adding messages from any script
+
+---
+
+### **PTSoulGen.cs** — Character Generator
+
+**Name Generation:**
+- `GenerateRandomName()` — Returns random name from default pool (Salen, Dran, Horus, etc.)
+- `GenerateNameForType(typeData, prefix)` — Formats as "[Prefix] FirstName the RaceName" (e.g., "Mighty Goro the Dwarf")
+- `RandomizeName(PTSoul soul)` — Re-rolls character's name while keeping all stats
+
+**Prefix System:**
+- `TryApplyPrefix(PTSoul soul)` — 35% chance to give character random stat-modifying prefix
+
+**Party Member Creation:**
+- `RandomizeStats(PTSoul soul)` — Creates party member from scratch: picks friendly race, rolls attributes, applies prefix, sets wages, starts at level 1
+- `CreateRandomRecruit()` — **Full pipeline:** spawns prefab, runs RandomizeStats, returns finished character
+- `RandomizeCombatStats(PTSoul soul)` — Re-rolls build, keeps level/name but randomizes all attributes
+
+**Enemy Creation:**
+- `PickEnemyType(int partyLevel)` — Chooses appropriate enemy type whose level range matches party's level
+- `RandomizeEnemyStats(PTSoul soul, int partyLevel)` — Creates enemy: picks type, rolls attributes, caps level at party level, applies prefix
+- `SpawnEnemy()` — **Full pipeline:** spawns enemy prefab, runs RandomizeEnemyStats, returns finished enemy
+
+**Utility:**
+- `GetTypeData(string typeName)` — Looks up race configuration by name (e.g., "Human", "Goblin")
+
+---
+
+### **PTSoulTypeData.cs** — Race Configuration (ScriptableObject)
+
+**Core Method:**
+- `ApplyAttributes(PTSoul soul)` — Rolls character creation: sets race, enemy status, random level in range, random attributes in ranges, adds per-level scaling, sets rewards
+
+**Properties:**
+- `HasWageOverride` — Returns true if this race has custom wage ranges set
+- `HasNamePool` — Returns true if this race has custom first names list
+- `GenerateName()` — Returns random name from this race's name pool
+
+---
+
+### **PTSoulPrefix.cs** — Character Prefix System
+
+**Application:**
+- `Apply(PTSoul soul)` — Applies modifier to chosen attribute (e.g., "Mighty" adds +3 to Might), clamped 1-99
+
+---
+
+### **DeadCharacterData** — Resurrection Data
+
+**Constructor:**
+- `DeadCharacterData(PTSoul soul, GameObject prefab)` — Saves snapshot of all stats, name, race, level, wages before death
+
+**Restoration:**
+- `ApplyTo(PTSoul soul, float statPenalty)` — Restores saved stats to new body with 10% penalty, marks as "Marked by Death", makes fearless
+
+---------------------------------------------------------------------------------------
+
+## Key Gameplay Flows
+
+**Daily Loop:**
+```
+Wake Up → See Wages → Find Enemies (E) → Fight → Win → Get Gold → 
+Recruit (F) / Heal (Q) / Bless (1) → Sleep (Space) → Repeat
+```
+
+**Combat Turn Order:**
+1. Compare average Sense: higher side goes first
+2. Each phase: characters act in order of highest → lowest Sense
+3. Party phase: player manually clicks Attack for each member
+4. Enemy phase: all enemies attack automatically
+5. New round starts, repeat until victory/defeat
+
+**Stat Derivation Formulas:**
+- **Max HP** = 60 + (Constitution × 10)
+- **Attack** = Might × 4
+- **Defense** = Constitution × 2
+- **Crit Chance** = Luck × 3% (capped at 75%)
+- **Crit Multiplier** = 1.5 + (Luck × 0.02) + (Might × 0.02) + (Sense × 0.02)
+- **Damage Reduction** = Defense / (Defense + 50) — diminishing returns formula
+
+**Enemy Spawn Scaling:**
+- **Base Formula:** Random.Range(partyCount, partyCount × 2)
+- **Daily Escalation:** After day 7, add +1 enemy per day
+- **Example:** 2-member party on day 1 = 2-4 enemies; day 10 = 2-7 enemies
+
+---------------------------------------------------------------------------------------
+
+## Balance Constants (PTManager.cs)
+
+| Constant | Value | Description |
+---------------------------------------------------------------------------------------
+| `DAYS_UNTIL_MUTINY` | 3 | Days without paying wages before game over |
+| `BASE_HEAL_AMOUNT` | 50 | HP restored per party member (base healing) |
+| `HEAL_COST_PER_MEMBER` | 10 | Gold cost per member for healing service |
+| `BLESS_COST_PER_MEMBER` | 100 | Gold cost per member for blessing service |
+| `BASE_RESURRECTION_COST` | 100 | Base gold cost for resurrection (+ wages) |
+| `THEFT_CHANCE_BROKE` | 0.25 | 25% theft chance when wages unpaid |
+| `THEFT_CHANCE_NORMAL` | 0.1 | 10% theft chance when wages paid |
+| `THEFT_PERCENT_BROKE` | 0.1 | 10% of gold stolen when broke |
+| `THEFT_PERCENT_NORMAL` | 0.2 | 20% of gold stolen normally |
+| `FLEE_COST_PERCENT` | 0.1 | 10% of gold dropped to attempt fleeing |
+| `RESURRECTION_UNLOCK_DAY` | 7 | Day when resurrection becomes available |
+| `WEEKLY_BONUS_INTERVAL` | 7 | Days between weekly survival bonuses |
+
+---------------------------------------------------------------------------------------
+
+## Design & Architecture Decisions
+
+**Partial Classes:** PTManager is split across 4 files (Combat, Town, Party, Core) to organize code by responsibility domain while maintaining shared state.
+
+**Data-Driven Character Generation:** PTSoulTypeData ScriptableObjects allow designers to configure new races/enemies without touching code. Each type defines attribute ranges, level brackets, rewards, and scaling.
+
+
+**Turn-Based Initiative:** Each round, all combatants are sorted by Sense attribute. Average Sense determines phase order (party vs enemy), creating tactical value for high-Sense characters.
+
+**Singleton Adventure Log:** Static PTAdventureLog.Log() allows any script to append messages without coupling, while automatic colorization maintains visual consistency.
+
+**Resurrection Snapshot Pattern:** DeadCharacterData captures character state at death, allowing resurrection with stat penalties while preserving identity and preventing duplicate names.
+
+**Status Flag System:** Boolean flags (isCowardly, markedByDeath, isAdversary) on PTSoul enable complex interactions without inheritance (e.g., cowards reduce healing, marked characters can't become cowards).
+
+**Diminishing Returns Defense:** Formula defense/(defense+50) ensures high defense is valuable but never reaches immunity, maintaining tactical balance at all levels.
+
+---------------------------------------------------------------------------------------
+
+## Implementation Notes
+
+- **Gold Safety:** All gold deductions use `Mathf.Max(gold - amount, 0)` to prevent negative values
+- **Auto-Scroll Intelligence:** Log only auto-scrolls if user was already near bottom (within 10% threshold)
+- **Formation Recentering:** When adding party members, entire formation recalculates to keep the group centered on spawn point
+- **Prefix Rarity:** 35% chance to apply prefix ensures they feel special without being overwhelming
+- **Enemy Level Capping:** Enemies never spawn above party's average level, preventing impossible encounters
+- **Wage Inflation:** Each level-up increases wages by 25%, creating escalating economic pressure
+- **Debug Mode Toggle:** Set `debugMode = true` in PTManager inspector to see AI decisions and spawn calculations in console
+- **Escape Individual Rolls:** Each party member independently rolls escape based on their agility vs average enemy agility (50% base ± difference)
+- **Colorization Regex:** Adventure log uses regex patterns to auto-detect and colorize gold amounts, HP, enemy names, etc.
+- **Theft Escalation:** Being broke increases both theft chance (10%→25%) and theft penalty logic to create pressure
+- **UI Context Awareness:** Control display dynamically hides unavailable actions (e.g., Heal button disappears after daily use)
+- **Prefab Fallback Chain:** Resurrection tries original prefab → first party prefab → logs warning if all fail
+
+---------------------------------------------------------------------------------------
+
+## ⚖️ Recent Balance Changes
+
+### v0.4 - Combat Scaling Adjustment
+**Problem Identified:** With spawn formula `partyCount * 3`, a 2-member party faced 2-6 goblins on day 1. Action economy heavily favored enemies (6 attacks vs 2 per round), resulting in party struggling against full groups.
+
+**Analysis:**
+- Average Goblin: 70 HP, 6 attack, 2 defense
+- Average Human: 90 HP, 8 attack, 9 defense (+3 party bonus)
+- 2 humans vs 6 goblins: Each human takes ~3 hits/round = 15 damage
+- Humans survive ~6 rounds but need ~27+ hits to eliminate all goblins
+- Result: Enemies' numerical advantage overwhelming party
+
+**Solution:** Reduced spawn multiplier from **3x to 2x** party count
+- **Old:** `Random.Range(partyCount, partyCount * 3)` → 2-member party = 2-6 enemies
+- **New:** `Random.Range(partyCount, partyCount * 2)` → 2-member party = 2-4 enemies
+- Daily escalation remains: +1 enemy per day after day 7
+- Enemy stat ranges unchanged; only quantity adjusted
+
+**Result:** Improved survivability while maintaining challenge curve. Parties can win early encounters without perfect RNG, allowing progression to unlock healing, recruitment, and resurrection systems.
+
+---------------------------------------------------------------------------------------
+
+## 📝 Development Notes
+
+- **Character Generation Pipeline:** PTSoulGen → PTSoulTypeData → PTSoul → UI
+- **Combat Flow:** OnEncounter → StartCombat → StartRound → Party Phase → Enemy Phase → Victory/Defeat
+- **Resurrection Pipeline:** Death → DeadCharacterData → Resurrection → ApplyTo with penalties
+- **Log Message Flow:** Any script → PTAdventureLog.Log() → ColorizeMessage → AddVisualEntry → Auto-scroll
+- **Gold Transaction Path:** Any system → ChangeGold() → OnGoldChanged event → UpdateUI + Sound
+
+---
+
+**Party Taxes** - Built with Unity 6 | Input System | TextMesh Pro | Made for GAD170 Project 1

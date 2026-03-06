@@ -22,15 +22,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 126fb06b8cc120641b11d43afe321436, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 13.027
+      value: -1.7809042
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 126fb06b8cc120641b11d43afe321436, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.00000020279995
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 126fb06b8cc120641b11d43afe321436, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -23.311
+      value: -8.332163
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 126fb06b8cc120641b11d43afe321436, type: 3}
       propertyPath: m_LocalRotation.w
@@ -94,6 +94,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 126fb06b8cc120641b11d43afe321436, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5689083347184718131}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 126fb06b8cc120641b11d43afe321436, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8319609637919129534}
   m_SourcePrefab: {fileID: 100100000, guid: 126fb06b8cc120641b11d43afe321436, type: 3}
 --- !u!1 &2846588810715049013 stripped
 GameObject:
@@ -118,14 +121,22 @@ MonoBehaviour:
   nameText: {fileID: 1765059760232005806}
   healthText: {fileID: 6025770375934245057}
   healthSlider: {fileID: 1518656251566267381}
-  Name: Goblin
+  Name: 
   Type: Goblin
   level: 1
   currentXp: 0
   xpToNextLevel: 0
+  atrMight: 0
+  atrAgility: 0
+  atrConstitution: 0
+  atrSense: 0
+  atrLuck: 0
+  atrPoints: 0
   maxHP: 20
   currentHP: 20
   attack: 7
+  critChance: 0
+  critMultiplier: 0
   defense: 2
   dailywages: 0
   isCowardly: 0
@@ -133,6 +144,29 @@ MonoBehaviour:
   isAdversary: 1
   goldReward: 1
   accumulatedLifeXp: 20
+--- !u!136 &8319609637919129534
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2846588810715049013}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.3033091
+  m_Height: 1.8787334
+  m_Direction: 1
+  m_Center: {x: 0.008123065, y: 0.9174212, z: -0.0000035856012}
 --- !u!4 &3227618434702767759 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 126fb06b8cc120641b11d43afe321436, type: 3}

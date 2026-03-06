@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f33d0ae4169a0f842a7f904b9bd6a590, type: 3}
+  m_Name: SoulType_Human
+  m_EditorClassIdentifier: Assembly-CSharp::PartyTaxes.PTSoulTypeData
+  typeName: Human
+  isAdversary: 0
+  names:
+  - Dorian
+  - Varric
+  - Brenner
+  - Lucan
+  - Elric
+  - Aldric
+  - Corvin
+  - Torren
+  - Soren
+  - Salen
+  - Tavian
+  - Alistair
+  - Berek
+  - Leoric
+  - Hans
+  - Henry
+  - Aura
+  - Gilaine
+  - Stella
+  - Alfren
+  mightRange: {x: 1, y: 3}
+  agilityRange: {x: 1, y: 4}
+  constitutionRange: {x: 2, y: 4}
+  senseRange: {x: 1, y: 4}
+  luckRange: {x: 1, y: 4}
+  wageRange: {x: 0, y: 0}
+  levelRange: {x: 0, y: 0}
+  goldRewardRange: {x: 5, y: 10}
+  lifeXpRange: {x: 0, y: 0}
+  bonusMightPerLevel: 0
+  bonusAgilityPerLevel: 0
+  bonusConstitutionPerLevel: 0
+  bonusSensePerLevel: 0
+  bonusLuckPerLevel: 0

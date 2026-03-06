@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f33d0ae4169a0f842a7f904b9bd6a590, type: 3}
+  m_Name: SoulType_Orc
+  m_EditorClassIdentifier: Assembly-CSharp::PartyTaxes.PTSoulTypeData
+  typeName: Orc
+  isAdversary: 1
+  names:
+  - Thruk
+  - Drogath
+  - Morgash
+  - Brugor
+  - Mogdrak
+  - Grendek
+  - Rukthar
+  - Korgash
+  - Brakka
+  - Urkzaz
+  mightRange: {x: 5, y: 7}
+  agilityRange: {x: 1, y: 2}
+  constitutionRange: {x: 5, y: 6}
+  senseRange: {x: 2, y: 4}
+  luckRange: {x: 1, y: 3}
+  wageRange: {x: 0, y: 0}
+  levelRange: {x: 13, y: 15}
+  goldRewardRange: {x: 40, y: 65}
+  lifeXpRange: {x: 390, y: 480}
+  bonusMightPerLevel: 0.8
+  bonusAgilityPerLevel: 1
+  bonusConstitutionPerLevel: 0.3
+  bonusSensePerLevel: 0.6
+  bonusLuckPerLevel: 0.3
