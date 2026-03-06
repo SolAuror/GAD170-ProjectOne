@@ -235,8 +235,15 @@ public partial class PTManager : MonoBehaviour, SimpleControls.IPlayerActions   
         if (adversaries.Count > 0)                                                                          //in battle - show combat controls
         {
             controls = "<b>COMBAT</b>\n";
-            controls += "Left Click - Attack\n";
-            controls += "R - Run Away\n";
+            if (awaitingPartyInput && activeActor != null)                                                  //if waiting for player action on their turn
+            {
+                controls += "Left Click - Attack\n";
+                controls += "R - Run Away\n";
+            }
+            else                                                                                            //enemy turn or between turns
+            {
+                controls += "Waiting for turn...\n";
+            }
         }
         else                                                                                                //in town - show town controls
         {
@@ -307,9 +314,16 @@ public partial class PTManager : MonoBehaviour, SimpleControls.IPlayerActions   
     {
         return;
     }
-    public void On_4(InputAction.CallbackContext context)
+    
+    public void On_4(InputAction.CallbackContext context)                         //Debug method - Auto assign attribute points
     {
-        return;
+        if (!context.performed) return;
+        if (!debugMode)
+        {
+            PTAdventureLog.Log("Debug mode is not enabled. Press 4 only works when Debug Mode is enabled in PTManager.");
+            return;
+        }
+        DebugAutoAssignAllAttributePoints();
     }
 
     public void On_5(InputAction.CallbackContext context)

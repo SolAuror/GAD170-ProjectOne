@@ -114,7 +114,7 @@ MonoBehaviour:
   nameText: {fileID: 2391377399903005559}
   healthText: {fileID: 7696361114439471896}
   healthSlider: {fileID: 3189243718383317036}
-  Name: Sol
+  Name: Strider
   Type: Human
   level: 1
   currentXp: 0
@@ -134,6 +134,7 @@ MonoBehaviour:
   dailywages: 12
   isCowardly: 0
   markedByDeath: 0
+  hasFled: 0
   isAdversary: 0
   goldReward: 10
   accumulatedLifeXp: 25

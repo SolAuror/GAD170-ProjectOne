@@ -3,41 +3,43 @@ using System.Linq;                                                              
 using UnityEngine;
 using UnityEngine.InputSystem;
 using PartyTaxes;
+using System.Reflection;
 
 
 /// PTManager partial — Combat Part: Encounter spawning, attack rounds, and flee logic.
-public partial class PTManager 
+public partial class PTManager
 {
-  // ─── Kill tracking ───
-  private Dictionary<PTSoul, PTSoul> killCredit      = new Dictionary<PTSoul, PTSoul>();  // which party member landed each killing blow
-  private Dictionary<PTSoul, PTSoul> enemyKillCredit = new Dictionary<PTSoul, PTSoul>();  // which enemy landed each killing blow
+    [Header("Combat Timing")]
+    [SerializeField, Tooltip("Delay in seconds between each enemy attack")]
+    private float enemyAttackDelay = 0.3f;
 
-  // ─── Turn queue state ───
-  private List<PTSoul> partyTurnQueue    = new List<PTSoul>();                            // party members sorted by atrSense for the current round
-  private int          partyTurnIndex    = 0;                                             // current position in the party queue
-  private bool         enemyGoesFirst    = false;                                         // true when enemies have higher avg atrSense
-  private bool         awaitingPartyInput = false;                                        // true when waiting for the player to press Attack
-  private PTSoul       activeActor       = null;                                          // the party member whose turn it currently is
+    private Dictionary<PTSoul, PTSoul> killCredit = new Dictionary<PTSoul, PTSoul>();  // which party member landed each killing blow
+    private Dictionary<PTSoul, PTSoul> enemyKillCredit = new Dictionary<PTSoul, PTSoul>();  // which enemy landed each killing blow
 
+    private List<PTSoul> partyTurnQueue = new List<PTSoul>();                            // party members sorted by atrSense for the current round
+    private int partyTurnIndex = 0;                                             // current position in the party queue
+    private bool enemyGoesFirst = false;                                         // true when enemies have higher avg atrSense
+    private bool awaitingPartyInput = false;                                        // true when waiting for the player to press Attack
+    private PTSoul activeActor = null;                                          // the party member whose turn it currently is
 
-  public void ChangeXP(int xpAmount, string source = null)
-  {
-    if (partyMembers.Count > 0)
+    public void ChangeXP(int xpAmount, string source = null)
     {
-      int xpShare = Mathf.FloorToInt((float)xpAmount / partyMembers.Count);
-      foreach (PTSoul member in partyMembers)
+        if (partyMembers.Count > 0)
         {
-            if (member.isAlive)
+            int xpShare = Mathf.FloorToInt((float)xpAmount / partyMembers.Count);
+            foreach (PTSoul member in partyMembers)
             {
-            member.GainXP(xpShare);
-            if (!string.IsNullOrEmpty(source))
-            {
-                PTAdventureLog.Log(member.Name + " gained " + xpShare + " XP!");
+                if (member.isAlive)
+                {
+                    member.GainXP(xpShare);
+                    if (!string.IsNullOrEmpty(source))
+                    {
+                        PTAdventureLog.Log(member.Name + " gained " + xpShare + " XP!");
+                    }
+                }
             }
         }
-      }
     }
-  }
 
     public void OnEncounter(InputAction.CallbackContext context)                                            //Method to handle E key press, using new InputActions system
     {
@@ -46,107 +48,107 @@ public partial class PTManager
         {
             if (!hasFought)                                                                                 // Only allow one encounter per day
             {
-              int extraSpawns = Mathf.Max(0, daysElapsed - 7);                                              //add +1 spawn for each day after day 7 (0 extra on days 1-7, +1 on day 8, +7 on day 14, etc.)
-              int spawnMax = (partyCount * 2) + extraSpawns;                                                //maximum spawn count with linear scaling
-              int spawnCount = Random.Range(partyCount, spawnMax);                                          //random number of enemies to spawn with linear daily scaling
-              if (soulGen != null && soulGen.enemyBasePrefab != null)
-              {
-                  Vector3 baseSpawnPosition = enemySpawnPoint != null ?
-                                              enemySpawnPoint.position :
-                                              transform.position;                                           //use spawn point if assigned, otherwise use PTManager position
-                  float minDistance = 1.5f;                                                                 //minimum distance between enemies
-                  int maxAttempts = 30;                                                                     //maximum attempts to find valid position
-                  int partyLevel  = GetAveragePartyLevel();                                                 //current average party level for type selection
+                int extraSpawns = daysElapsed < 7 ? 0 : ((daysElapsed - 7) / 3) + 1;                          //0 extra until day 7, then +1 every 3 days (day 7-9: +1, day 10-12: +2, day 13-15: +3, etc.)
+                int spawnMax = (partyCount * 2) + extraSpawns;                                                //maximum spawn count with linear scaling
+                int spawnCount = Random.Range(partyCount, spawnMax);                                          //random number of enemies to spawn with linear daily scaling
+                if (soulGen != null && soulGen.enemyBasePrefab != null)
+                {
+                    Vector3 baseSpawnPosition = enemySpawnPoint != null ?
+                                                enemySpawnPoint.position :
+                                                transform.position;                                           //use spawn point if assigned, otherwise use PTManager position
+                    float minDistance = 1.5f;                                                                 //minimum distance between enemies
+                    int maxAttempts = 30;                                                                     //maximum attempts to find valid position
+                    int partyLevel = GetAveragePartyLevel();                                                 //current average party level for type selection
 
-                  for (int i = 0; i < spawnCount; i++)
-                  {
-                      Vector3 spawnPosition = baseSpawnPosition;
+                    for (int i = 0; i < spawnCount; i++)
+                    {
+                        Vector3 spawnPosition = baseSpawnPosition;
 
-                      for (int attempt = 0; attempt < maxAttempts; attempt++)                               //try to find a non-overlapping position
-                      {
-                          Vector3 randomOffset = Random.insideUnitSphere * 3f;
-                          randomOffset.y = 0;
-                          spawnPosition = baseSpawnPosition + randomOffset;
+                        for (int attempt = 0; attempt < maxAttempts; attempt++)                               //try to find a non-overlapping position
+                        {
+                            Vector3 randomOffset = Random.insideUnitSphere * 3f;
+                            randomOffset.y = 0;
+                            spawnPosition = baseSpawnPosition + randomOffset;
 
-                          bool validPosition = true;
-                          foreach (PTSoul existingEnemy in adversaries)
-                          {
-                              if (Vector3.Distance(spawnPosition, existingEnemy.transform.position) < minDistance)
-                              {
-                                  validPosition = false;
-                                  break;
-                              }
-                          }
-                          if (validPosition) break;
-                      }
+                            bool validPosition = true;
+                            foreach (PTSoul existingEnemy in adversaries)
+                            {
+                                if (Vector3.Distance(spawnPosition, existingEnemy.transform.position) < minDistance)
+                                {
+                                    validPosition = false;
+                                    break;
+                                }
+                            }
+                            if (validPosition) break;
+                        }
 
-                      GameObject enemyObj = soulGen.SpawnEnemy(transform, spawnPosition, partyLevel);       //delegate all type selection and stat generation to PTSoulGen
-                      if (enemyObj != null)
-                      {
-                          PTSoul enemySoul = enemyObj.GetComponent<PTSoul>();
-                          if (enemySoul != null)
-                              adversaries.Add(enemySoul);                                                   //add to adversaries list
-                      }
-                  }
-              }
-              else if (enemyPrefabs != null && enemyPrefabs.Length > 0)                                     //legacy fallback: use assigned prefab array if no soulGen
-              {
-                  Vector3 baseSpawnPosition = enemySpawnPoint != null ?
-                                              enemySpawnPoint.position :
-                                              transform.position;
-                  float minDistance = 1.5f;
-                  int maxAttempts = 30;
+                        GameObject enemyObj = soulGen.SpawnEnemy(transform, spawnPosition, partyLevel);       //delegate all type selection and stat generation to PTSoulGen
+                        if (enemyObj != null)
+                        {
+                            PTSoul enemySoul = enemyObj.GetComponent<PTSoul>();
+                            if (enemySoul != null)
+                                adversaries.Add(enemySoul);                                                   //add to adversaries list
+                        }
+                    }
+                }
+                else if (enemyPrefabs != null && enemyPrefabs.Length > 0)                                     //legacy fallback: use assigned prefab array if no soulGen
+                {
+                    Vector3 baseSpawnPosition = enemySpawnPoint != null ?
+                                                enemySpawnPoint.position :
+                                                transform.position;
+                    float minDistance = 1.5f;
+                    int maxAttempts = 30;
 
-                  for (int i = 0; i < spawnCount; i++)
-                  {
-                      Vector3 spawnPosition = baseSpawnPosition;
-                      bool validPosition = false;
+                    for (int i = 0; i < spawnCount; i++)
+                    {
+                        Vector3 spawnPosition = baseSpawnPosition;
+                        bool validPosition = false;
 
-                      for (int attempt = 0; attempt < maxAttempts; attempt++)
-                      {
-                          Vector3 randomOffset = Random.insideUnitSphere * 3f;
-                          randomOffset.y = 0;
-                          spawnPosition = baseSpawnPosition + randomOffset;
+                        for (int attempt = 0; attempt < maxAttempts; attempt++)
+                        {
+                            Vector3 randomOffset = Random.insideUnitSphere * 3f;
+                            randomOffset.y = 0;
+                            spawnPosition = baseSpawnPosition + randomOffset;
 
-                          validPosition = true;
-                          foreach (PTSoul existingEnemy in adversaries)
-                          {
-                              if (Vector3.Distance(spawnPosition, existingEnemy.transform.position) < minDistance)
-                              {
-                                  validPosition = false;
-                                  break;
-                              }
-                          }
-                          if (validPosition) break;
-                      }
+                            validPosition = true;
+                            foreach (PTSoul existingEnemy in adversaries)
+                            {
+                                if (Vector3.Distance(spawnPosition, existingEnemy.transform.position) < minDistance)
+                                {
+                                    validPosition = false;
+                                    break;
+                                }
+                            }
+                            if (validPosition) break;
+                        }
 
-                      GameObject randomEnemyPrefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
-                      int avgLevel = GetAveragePartyLevel();
-                      if (randomEnemyPrefab.GetComponent<PTSoul>().level > avgLevel)
-                      {
-                          System.Collections.Generic.List<GameObject> suitableEnemies = new System.Collections.Generic.List<GameObject>();
-                          foreach (GameObject prefab in enemyPrefabs)
-                              if (prefab.GetComponent<PTSoul>().level <= avgLevel)
-                                  suitableEnemies.Add(prefab);
-                          if (suitableEnemies.Count > 0)
-                              randomEnemyPrefab = suitableEnemies[Random.Range(0, suitableEnemies.Count)];
-                      }
+                        GameObject randomEnemyPrefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
+                        int avgLevel = GetAveragePartyLevel();
+                        if (randomEnemyPrefab.GetComponent<PTSoul>().level > avgLevel)
+                        {
+                            System.Collections.Generic.List<GameObject> suitableEnemies = new System.Collections.Generic.List<GameObject>();
+                            foreach (GameObject prefab in enemyPrefabs)
+                                if (prefab.GetComponent<PTSoul>().level <= avgLevel)
+                                    suitableEnemies.Add(prefab);
+                            if (suitableEnemies.Count > 0)
+                                randomEnemyPrefab = suitableEnemies[Random.Range(0, suitableEnemies.Count)];
+                        }
 
-                      GameObject enemyObj = Instantiate(randomEnemyPrefab, spawnPosition, Quaternion.identity, transform);
-                      enemyObj.name = enemyObj.GetComponent<PTSoul>().Type + (i + 1);
-                      PTSoul enemySoul = enemyObj.GetComponent<PTSoul>();
-                      if (enemySoul != null)
-                          adversaries.Add(enemySoul);
-                  }
-              }
-              
-              hasFought = true;                                                                             //set hasFought to true for the day
-              
-              enemyMsg = "An enemy has appeared! There are now " + adversaries.Count + 
-                                  " " + (adversaries.Count > 0 ? "<enemy>" + adversaries[0].Name + "</enemy>" : "enemy") + "s to fight!";                                //sets the enemy message
+                        GameObject enemyObj = Instantiate(randomEnemyPrefab, spawnPosition, Quaternion.identity, transform);
+                        enemyObj.name = enemyObj.GetComponent<PTSoul>().Type + (i + 1);
+                        PTSoul enemySoul = enemyObj.GetComponent<PTSoul>();
+                        if (enemySoul != null)
+                            adversaries.Add(enemySoul);
+                    }
+                }
+
+                hasFought = true;                                                                             //set hasFought to true for the day
+
+                enemyMsg = "An enemy has appeared! There are now " + adversaries.Count +
+                                    " " + (adversaries.Count > 0 ? "<enemy>" + adversaries[0].Name + "</enemy>" : "enemy") + "s to fight!";                                //sets the enemy message
                 if (adversaries.Count > 0)                                                                  //check if there are enemies to fight            
                 {
-                  canSleep = false;                                                                         //disable sleeping    
+                    canSleep = false;                                                                         //disable sleeping    
                 }
 
                 PTAdventureLog.Log(enemyMsg);                                                               //print enemy message
@@ -160,19 +162,13 @@ public partial class PTManager
             }
             else if (hasFought && adversaries.Count <= 0)                                              //check if the player has already fought and there are no enemies to fight
             {
-                PTAdventureLog.Log("You have already fought for the day, " + 
+                PTAdventureLog.Log("You have already fought for the day, " +
                                    "there are no enemies to fight!");                                   //log already fought message
             }
-      } 
+        }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    // TURN QUEUE SYSTEM
-    // ─────────────────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Called when an encounter starts. Builds the first round and begins combat.
-    /// </summary>
+#region Combat State Management
     private void StartCombat()
     {
         killCredit.Clear();
@@ -183,39 +179,56 @@ public partial class PTManager
         StartRound();
     }
 
-    /// <summary>
-    /// Resets all combat state. Call when combat ends for any reason.
-    /// </summary>
-    private void ResetCombatState()
+    private void ResetCombatState()                                                             /// Resets all combat state. Call when combat ends for any reason.
     {
         partyTurnQueue.Clear();
-        partyTurnIndex    = 0;
+        partyTurnIndex = 0;
         awaitingPartyInput = false;
-        activeActor       = null;
+        activeActor = null;
         killCredit.Clear();
         enemyKillCredit.Clear();
+        UnhideAllFledMembers();                                                         // Unhide fled members when combat ends
     }
 
-    /// <summary>
-    /// Begins a new round: builds sorted phase queues, determines phase order by
-    /// average atrSense, then either runs the enemy phase first (auto) before
-    /// handing control to the party, or goes straight to the party phase.
-    /// </summary>
-    private void StartRound()
+    private bool AreAllPartyMembersDead()                                               //Method for checking if party is dead, not just fled - used to determine if game over should trigger instead of just combat end
+    {
+        return partyMembers.Count == 0 || partyMembers.All(m => !m.isAlive);
+    }
+
+    private bool AreNoPartyMembersInCombat()                                            //Method for checking if party is dead or has fled - used to determine if combat should end without victory
+    {
+        return partyMembers.Count(m => m.isAlive && !m.hasFled) == 0;
+    }
+
+    private void UnhideAllFledMembers()                                                 //Method for on combat end or when returning to town, unhide any members who fled and reset their fled status
+    {
+        foreach (PTSoul member in partyMembers)
+        {
+            if (member.hasFled)
+            {
+                member.hasFled = false;
+                member.gameObject.SetActive(true);
+            }
+        }
+    }
+#endregion
+
+#region Combat Phases
+    private void StartRound()                                                   /// determines initiative by average atrSense, then either runs the enemy phase first (auto) or starts the party phase (waiting for player input)
     {
         killCredit.Clear();
         enemyKillCredit.Clear();
 
-        // Build party turn order (highest sense first)
-        partyTurnQueue = partyMembers.Where(m => m.isAlive)
+        // Build party turn order (highest sense first) — exclude fled members
+        partyTurnQueue = partyMembers.Where(m => m.isAlive && !m.hasFled)
                                      .OrderByDescending(m => m.atrSense)
                                      .ToList();
         partyTurnIndex = 0;
 
         // Determine phase order by average atrSense
-        float partyAvg  = partyMembers.Count  > 0 ? (float)partyMembers.Sum(m => m.atrSense)  / partyMembers.Count  : 0f;
-        float enemyAvg  = adversaries.Count   > 0 ? (float)adversaries.Sum(e => e.atrSense)   / adversaries.Count   : 0f;
-        enemyGoesFirst  = enemyAvg > partyAvg;                       // party wins on tie
+        float partyAvg = partyMembers.Count > 0 ? (float)partyMembers.Sum(m => m.atrSense) / partyMembers.Count : 0f;
+        float enemyAvg = adversaries.Count > 0 ? (float)adversaries.Sum(e => e.atrSense) / adversaries.Count : 0f;
+        enemyGoesFirst = enemyAvg > partyAvg;                       // party wins on tie
 
         if (debugMode)
             Debug.Log("Round start — Party avg Sense: " + partyAvg + " | Enemy avg Sense: " + enemyAvg +
@@ -224,22 +237,73 @@ public partial class PTManager
         if (enemyGoesFirst)
         {
             PTAdventureLog.Log("=== ENEMY PHASE ===");
-            bool allPartyDead = RunEnemyPhase();
-            UpdateUI();
-            if (allPartyDead) { ResetCombatState(); TriggerGameOver("You've been slaughtered by the enemy!"); return; }
+            StartCoroutine(RunEnemyPhase());
+        }
+        else
+        {
+            // Begin party phase immediately if enemies don't go first
+            PTAdventureLog.Log("=== PARTY PHASE ===");
+            AdvancePartyTurn();
+        }
+    }
+
+
+    private void OnEnemyPhaseComplete()                                                 /// Called after enemy phase completes to continue to party phase.
+    {
+        UpdateUI();
+
+        // Check if no party members are left in combat
+        if (AreNoPartyMembersInCombat())
+        {
+            if (AreAllPartyMembersDead())
+            {
+                ResetCombatState();
+                TriggerGameOver("You've been slaughtered by the enemy!");
+            }
+            else
+            {
+                OnCombatEndedWithoutVictory();
+            }
+            return;
         }
 
-        // Begin party phase (pauses for input on each member)
+        // Begin party phase
         PTAdventureLog.Log("=== PARTY PHASE ===");
         AdvancePartyTurn();
     }
 
-    /// <summary>
-    /// Advances to the next living party member's turn, pausing for player input.
-    /// When the party queue is exhausted, runs the enemy phase (if not already run)
-    /// then starts a new round.
-    /// </summary>
-    private void AdvancePartyTurn()
+
+    private void OnMidRoundEnemyPhaseComplete()                                             /// Called after enemy phase in mid-round to check game state.
+    {
+        UpdateUI();
+
+        // Check if no party members are left in combat
+        if (AreNoPartyMembersInCombat())
+        {
+            if (AreAllPartyMembersDead())
+            {
+                ResetCombatState();
+                TriggerGameOver("You've been slaughtered by the enemy!");
+            }
+            else
+            {
+                OnCombatEndedWithoutVictory();
+            }
+            return;
+        }
+
+        if (adversaries.Count == 0)
+        {
+            OnAllEnemiesDefeated();
+            return;
+        }
+
+        // ── Start the next round ──────────────────────────────────
+        PTAdventureLog.Log("─── New Round ───");
+        StartRound();
+    }
+
+    private void AdvancePartyTurn()                                                     /// Advances to the next living party member's turn, or ends the round if the party phase is complete.
     {
         // Find next living party member
         while (partyTurnIndex < partyTurnQueue.Count)
@@ -253,63 +317,109 @@ public partial class PTManager
             // Pause and wait for player input
             activeActor = actor;
             awaitingPartyInput = true;
-            PTAdventureLog.Log(">>> It is " + actor.Name + "'s turn! Press Attack.");
+            PTAdventureLog.Log(">>> It is " + actor.Name + "'s turn! Press Attack or Run Away.");
             UpdateUI();
             return;
         }
 
-        // ── Party phase complete ───────────────────────────────────
+        //Party phase complete
         if (adversaries.Count == 0) { OnAllEnemiesDefeated(); return; }
+
+        // Check if no party members are left in combat (dead or fled)
+        if (AreNoPartyMembersInCombat())
+        {
+            if (AreAllPartyMembersDead())
+            {
+                ResetCombatState();
+                TriggerGameOver("You've been slaughtered by the enemy!");
+            }
+            else
+            {
+                // Everyone fled, end combat without rewards
+                OnCombatEndedWithoutVictory();
+            }
+            return;
+        }
 
         if (!enemyGoesFirst)                                         // enemies haven't run yet this round
         {
             PTAdventureLog.Log("=== ENEMY PHASE ===");
-            bool allPartyDead = RunEnemyPhase();
-            UpdateUI();
-            if (allPartyDead) { ResetCombatState(); TriggerGameOver("You've been slaughtered by the enemy!"); return; }
+            StartCoroutine(RunEnemyPhaseAndContinue());
+            return;
         }
 
+        // If enemies went first, continue to next round
         if (adversaries.Count == 0) { OnAllEnemiesDefeated(); return; }
-        if (partyMembers.Count == 0) { ResetCombatState(); TriggerGameOver("You've been slaughtered by the enemy!"); return; }
+        if (AreAllPartyMembersDead()) { ResetCombatState(); TriggerGameOver("You've been slaughtered by the enemy!"); return; }
 
         // ── Start the next round ──────────────────────────────────
         PTAdventureLog.Log("─── New Round ───");
         StartRound();
     }
 
-    /// <summary>
-    /// Runs all living enemies in atrSense order automatically.
-    /// Returns true if all party members are dead.
-    /// </summary>
-    private bool RunEnemyPhase()
+
+    private System.Collections.IEnumerator RunEnemyPhase()                              /// Runs all living enemies in atrSense order automatically with delays between attacks.
     {
         List<PTSoul> enemyOrder = adversaries.Where(e => e.isAlive)
                                              .OrderByDescending(e => e.atrSense)
                                              .ToList();
-        foreach (PTSoul enemy in enemyOrder)
-        {
-            if (!enemy.isAlive)    continue;                         // may have died during this phase
-            if (partyMembers.Count == 0) break;
 
-            bool allPartyDead = ProcessEnemyAttack(enemy);
-            if (allPartyDead) return true;
+        for (int i = 0; i < enemyOrder.Count; i++)
+        {
+            PTSoul enemy = enemyOrder[i];
+            if (!enemy.isAlive) continue;                         // may have died during this phase
+            if (AreNoPartyMembersInCombat()) break;                  // stop if no one left in combat
+
+            ProcessEnemyAttack(enemy);
+
+            if (AreNoPartyMembersInCombat()) break;
+
+            // Add delay between enemy attacks (except after the last one)
+            if (i < enemyOrder.Count - 1 && enemyAttackDelay > 0)
+            {
+                yield return new WaitForSeconds(enemyAttackDelay);
+            }
         }
-        return partyMembers.Count == 0;
+
+        OnEnemyPhaseComplete();
     }
 
-    /// <summary>
-    /// Executes the active party member's attack against a random enemy,
-    /// processes the result immediately, then resumes AdvanceToNextPartyTurn.
-    /// </summary>
-    private bool ProcessPartyAttack(PTSoul attacker)
+
+    private System.Collections.IEnumerator RunEnemyPhaseAndContinue()                      /// Runs enemy phase and continues to next round after completion.
+    {
+        List<PTSoul> enemyOrder = adversaries.Where(e => e.isAlive)
+                                             .OrderByDescending(e => e.atrSense)
+                                             .ToList();
+
+        for (int i = 0; i < enemyOrder.Count; i++)
+        {
+            PTSoul enemy = enemyOrder[i];
+            if (!enemy.isAlive) continue;
+            if (AreNoPartyMembersInCombat()) break;
+
+            ProcessEnemyAttack(enemy);
+
+            if (AreNoPartyMembersInCombat()) break;
+
+            if (i < enemyOrder.Count - 1 && enemyAttackDelay > 0)
+            {
+                yield return new WaitForSeconds(enemyAttackDelay);
+            }
+        }
+
+        OnMidRoundEnemyPhaseComplete();
+    }
+
+
+    private bool ProcessPartyAttack(PTSoul attacker)                                        ///against a random enemy, processes the result immediately, then resumes AdvanceToNextPartyTurn.
     {
         if (adversaries.Count == 0) return true;
 
         PTSoul target = adversaries[Random.Range(0, adversaries.Count)];
-        int damage      = attacker.DealDamage();
-        bool wasCrit    = attacker.WasCrit;
+        int damage = attacker.DealDamage();
+        bool wasCrit = attacker.WasCrit;
         int actualDamage = target.TakeDamage(damage);
-        string critTag   = wasCrit ? " <color=yellow>CRITICAL HIT!</color>" : "";
+        string critTag = wasCrit ? " <color=yellow>CRITICAL HIT!</color>" : "";
 
         PTAdventureLog.Log(attacker.Name + " attacks " +
                            "<enemy>" + target.Name + "</enemy>" + " for " + actualDamage + " damage!" + critTag + " " +
@@ -330,18 +440,19 @@ public partial class PTManager
         return adversaries.Count == 0;
     }
 
-    /// <summary>
-    /// Executes one enemy's automatic attack, processes the result immediately.
-    /// </summary>
-    private bool ProcessEnemyAttack(PTSoul enemyAttacker)
-    {
-        if (partyMembers.Count == 0) return true;
 
-        PTSoul partyTarget = partyMembers[Random.Range(0, partyMembers.Count)];
-        int enemyDamage  = enemyAttacker.DealDamage();
-        bool wasCrit     = enemyAttacker.WasCrit;
+    private void ProcessEnemyAttack(PTSoul enemyAttacker)                                       /// Executes one enemy's automatic attack, processes the result immediately.
+    {
+        // Filter for party members still in combat (alive and haven't fled)
+        List<PTSoul> availableTargets = partyMembers.Where(m => m.isAlive && !m.hasFled).ToList();
+
+        if (availableTargets.Count == 0) return;                     // no one left to target (all fled or dead)
+
+        PTSoul partyTarget = availableTargets[Random.Range(0, availableTargets.Count)];
+        int enemyDamage = enemyAttacker.DealDamage();
+        bool wasCrit = enemyAttacker.WasCrit;
         int actualDamage = partyTarget.TakeDamage(enemyDamage);
-        string critTag   = wasCrit ? " <color=yellow>CRITICAL HIT!</color>" : "";
+        string critTag = wasCrit ? " <color=yellow>CRITICAL HIT!</color>" : "";
 
         PTAdventureLog.Log("<enemy>" + enemyAttacker.Name + "</enemy>" + " attacks " +
                            partyTarget.Name + " for " + actualDamage + " damage!" + critTag + " " +
@@ -365,14 +476,10 @@ public partial class PTManager
             }
             RemovePartyMember(partyTarget);
         }
-
-        return partyMembers.Count == 0;
     }
+#endregion
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    // INPUT HANDLER
-    // ─────────────────────────────────────────────────────────────────────────────
-
+#region Player Input Handlers
     public void OnAttack(InputAction.CallbackContext context)                                               //Method to handle Left Click / Attack key
     {
         if (gameOver) return;
@@ -428,92 +535,99 @@ public partial class PTManager
         UpdateUI();
     }
 
+    // ─── Combat ended without victory (all fled or died) ───
+    private void OnCombatEndedWithoutVictory()
+    {
+        // Destroy all remaining enemies
+        for (int i = adversaries.Count - 1; i >= 0; i--)
+        {
+            Destroy(adversaries[i].gameObject);
+        }
+        adversaries.Clear();
+
+        ResetCombatState();
+        SetSunIntensity(0.1f);
+        canSleep = true;
+        PTAdventureLog.Log("All party members have fled or died! No gold was looted and no commission was earned.");
+        UpdateUI();
+    }
+
     public void OnRunAway(InputAction.CallbackContext context)                                                   //Method to handle R key press - Run from battle
     {
-      if (gameOver) return;                                                                               //block input after game over
-      if (context.performed)
-      {
+        if (gameOver) return;                                                                               //block input after game over
+        if (!context.performed) return;
+
         if (adversaries.Count == 0)                                                                       //if not in combat, can't flee
         {
-          PTAdventureLog.Log("There is no battle to run from!");                                          //log no battle message
-          return;
+            PTAdventureLog.Log("There is no battle to run from!");                                          //log no battle message
+            return;
         }
+
+        if (!awaitingPartyInput)                                                                          //only allow flee on party member's turn
+        {
+            PTAdventureLog.Log("You can only attempt to run away on your turn!");
+            return;
+        }
+
+        // Safety: skip if active actor died or is invalid
+        if (activeActor == null || !activeActor.isAlive)
+        {
+            awaitingPartyInput = false;
+            AdvancePartyTurn();
+            return;
+        }
+
+        // The active party member attempts to flee
+        PTSoul runner = activeActor;
+        awaitingPartyInput = false;                                                                       //end input wait
+        activeActor = null;                                                                               //clear active actor
 
         // Calculate average enemy agility
         float avgEnemyAgility = 0f;
         foreach (PTSoul enemy in adversaries)
         {
-          avgEnemyAgility += enemy.atrAgility;
+            avgEnemyAgility += enemy.atrAgility;
         }
         avgEnemyAgility /= adversaries.Count;
 
         int fleeCost = Mathf.Max(1, Mathf.FloorToInt(gold * FLEE_COST_PERCENT));                          //10% of current gold, minimum 1
         ChangeGold(-fleeCost);                                                                             //deduct flee cost
-        PTAdventureLog.Log("<partyname>" + partyName + "</partyname>" + " attempts to flee! " + fleeCost + " gold was lost.");
+        PTAdventureLog.Log(runner.Name + " attempts to flee! " + fleeCost + " gold was lost.");
 
-        // Each party member attempts to run individually based on their agility vs average enemy agility
-        List<PTSoul> escaped = new List<PTSoul>();
-        List<PTSoul> failedToEscape = new List<PTSoul>();
+        // Base 50% chance, +/- difference between member agility and average enemy agility
+        float agilityDifference = runner.atrAgility - avgEnemyAgility;
+        int escapeChance = Mathf.Clamp(50 + Mathf.RoundToInt(agilityDifference), 5, 95);                //clamp between 5% and 95%
 
-        foreach (PTSoul member in partyMembers)
+        int roll = Random.Range(0, 100);
+        bool escaped = roll < escapeChance;
+
+        if (escaped)
         {
-          if (!member.isAlive) continue;
-
-          // Base 50% chance, +/- difference between member agility and average enemy agility
-          float agilityDifference = member.atrAgility - avgEnemyAgility;
-          int escapeChance = Mathf.Clamp(50 + Mathf.RoundToInt(agilityDifference), 5, 95);                //clamp between 5% and 95%
-
-          int roll = Random.Range(0, 100);
-          if (roll < escapeChance)
-          {
-            escaped.Add(member);
-            PTAdventureLog.Log(member.Name + " escaped! (" + escapeChance + "% chance)");
-          }
-          else
-          {
-            failedToEscape.Add(member);
-            PTAdventureLog.Log(member.Name + " failed to run away! (" + escapeChance + "% chance)");
-          }
-        }
-
-        // Mark escaped members as cowardly
-        foreach (PTSoul member in escaped)
-        {
-          if (!member.markedByDeath)
-          {
-            member.isCowardly = true;
-          }
-        }
-
-        if (escaped.Count > 0)
-        {
-          PTAdventureLog.Log(escaped.Count + " party member(s) escaped and have been marked as Cowardly!");
-        }
-
-        // If everyone escaped, end combat
-        if (failedToEscape.Count == 0)
-        {
-          for (int i = adversaries.Count - 1; i >= 0; i--)                                                //destroy all enemies without gold reward
-          {
-            Destroy(adversaries[i].gameObject);
-          }
-          adversaries.Clear();
-
-          canSleep = true;                                                                                 //enable sleeping
-          SetSunIntensity(0.1f);
-
-          ResetCombatState();                                                                               //reset turn queue since combat is over
-          PTAdventureLog.Log("The whole party escaped the battle! No gold was looted and no commission was earned.");
+            runner.hasFled = true;                                                                          // Mark as fled
+            runner.gameObject.SetActive(false);                                                             // Hide from scene
+            if (!runner.markedByDeath)                                                                      // Mark as cowardly
+            {
+                runner.isCowardly = true;
+            }
+            PTAdventureLog.Log(runner.Name + " escaped! (" + escapeChance + "% chance) They have been marked as Cowardly!");
         }
         else
         {
-          PTAdventureLog.Log(failedToEscape.Count + " party member(s) are still stuck in combat!");
-          // Resume the queue for members still in combat
-          if (!awaitingPartyInput)
-              AdvancePartyTurn();
+            PTAdventureLog.Log(runner.Name + " failed to run away! (" + escapeChance + "% chance)");
+        }
+
+        // Check if no one is left in combat
+        if (AreNoPartyMembersInCombat())
+        {
+            OnCombatEndedWithoutVictory();
+        }
+        else
+        {
+            // Continue to next party member's turn
+            AdvancePartyTurn();
         }
 
         UpdateUI();
-      }
     }
+#endregion
 }

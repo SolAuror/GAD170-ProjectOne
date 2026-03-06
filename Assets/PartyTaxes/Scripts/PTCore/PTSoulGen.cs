@@ -159,10 +159,8 @@ public class PTSoulGen : MonoBehaviour                                          
         return closest;
     }
 
-    /// <summary>
     /// Randomizes all stats for an enemy soul based on party level, picking an
     /// appropriate adversary type from the soulTypes pool.
-    /// </summary>
     public void RandomizeEnemyStats(PTSoul soul, int partyLevel)
     {
         if (soul == null) return;
@@ -195,31 +193,62 @@ public class PTSoulGen : MonoBehaviour                                          
         soul.UpdateUI();
     }
 
-    /// <summary>
-    /// Instantiates an enemy from enemyBasePrefab, randomizes its stats for the
-    /// given party level, parents it to the given transform, and returns the GameObject.
-    /// Returns null if enemyBasePrefab is not assigned.
-    /// </summary>
+    /// Instantiates an enemy from enemyBasePrefab (or type-specific custom prefab),
+    /// randomizes its stats for the given party level, parents it to the given transform,
+    /// and returns the GameObject. Returns null if no valid prefab is available.
     public GameObject SpawnEnemy(Transform parent, Vector3 position, int partyLevel)
     {
-        if (enemyBasePrefab == null)
+        // Pick the enemy type first to determine which prefab to use
+        PTSoulTypeData typeData = PickEnemyType(partyLevel);
+        
+        // Determine which prefab to instantiate (type-specific or base)
+        GameObject prefabToUse = null;
+        if (typeData != null && typeData.HasCustomPrefab)
         {
-            Debug.LogWarning("PTSoulGen: enemyBasePrefab is not assigned.");
+            prefabToUse = typeData.customPrefab;
+        }
+        else if (enemyBasePrefab != null)
+        {
+            prefabToUse = enemyBasePrefab;
+        }
+        else
+        {
+            Debug.LogWarning("PTSoulGen: No valid prefab found for enemy spawn.");
             return null;
         }
-        GameObject enemyObj = Instantiate(enemyBasePrefab, position, Quaternion.identity, parent);
+
+        // Instantiate the chosen prefab
+        GameObject enemyObj = Instantiate(prefabToUse, position, Quaternion.identity, parent);
         PTSoul soul = enemyObj.GetComponent<PTSoul>();
+        
         if (soul != null)
         {
-            RandomizeEnemyStats(soul, partyLevel);
+            // Apply stats using the picked type data
+            if (typeData != null)
+            {
+                typeData.ApplyAttributes(soul);
+                soul.level = Mathf.Clamp(soul.level, 1, partyLevel);
+                PTSoulPrefix prefix = TryApplyPrefix(soul);
+                soul.Name = GenerateNameForType(typeData, prefix);
+            }
+            else
+            {
+                RandomizeEnemyStats(soul, partyLevel);
+            }
+
+            soul.currentXp = 0;
+            soul.xpToNextLevel = (soul.level + 1) * 50;
+            soul.RecalculateStats();
+            soul.currentHP = soul.maxHP;
+            soul.UpdateUI();
+            
             enemyObj.name = soul.Name;
         }
+        
         return enemyObj;
     }
 
-    /// <summary>
     /// Returns the PTSoulTypeData whose typeName matches the given name, or null if not found.
-    /// </summary>
     public PTSoulTypeData GetTypeData(string typeName)
     {
         if (soulTypes == null || string.IsNullOrEmpty(typeName)) return null;
@@ -228,9 +257,7 @@ public class PTSoulGen : MonoBehaviour                                          
         return null;
     }
     
-    /// <summary>
     /// Create a completely random recruit from a base prefab template
-    /// </summary>
     public GameObject CreateRandomRecruit(GameObject basePrefab, Transform parent, Vector3 position)
     {
         if (basePrefab == null) return null;
@@ -246,9 +273,7 @@ public class PTSoulGen : MonoBehaviour                                          
         return newRecruit;
     }
     
-    /// <summary>
     /// Randomize only the name of a PTSoul, keeping other stats intact
-    /// </summary>
     public void RandomizeName(PTSoul soul)
     {
         if (soul == null) return;
@@ -258,9 +283,7 @@ public class PTSoulGen : MonoBehaviour                                          
         soul.UpdateUI();
     }
     
-    /// <summary>
     /// Randomize only combat stats, keeping name and level intact
-    /// </summary>
     public void RandomizeCombatStats(PTSoul soul)
     {
         if (soul == null) return;

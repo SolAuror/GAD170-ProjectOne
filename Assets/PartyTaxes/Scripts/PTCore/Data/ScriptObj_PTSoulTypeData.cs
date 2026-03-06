@@ -53,6 +53,15 @@ namespace PartyTaxes
         [Tooltip("Bonus added to Luck per level above 1.")]
         public float bonusLuckPerLevel         = 0f;
 
+        [Header("Visual Appearance")]
+        [Tooltip("Optional: Custom prefab for this soul type. If assigned, this prefab will be used instead of the base enemy prefab. Must have a PTSoul component.")]
+        public GameObject customPrefab;
+
+        /// <summary>
+        /// Returns true if this type has a custom prefab assigned.
+        /// </summary>
+        public bool HasCustomPrefab => customPrefab != null;
+
         /// <summary>
         /// Applies randomly rolled attributes (within this type's ranges) to the given soul,
         /// then adds per-level bonuses based on the soul's rolled level.

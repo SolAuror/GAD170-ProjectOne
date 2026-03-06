@@ -20,10 +20,17 @@ public class PTAdventureLog : MonoBehaviour
     [SerializeField, Range(0.01f, 0.25f)] private float nearBottomThreshold = 0.1f;
     [SerializeField] private Color logTextColor = Color.white;
     
+    [Header("Timing")]
+    [SerializeField, Tooltip("Delay in seconds between log messages for readability")]
+    private float logMessageDelay = 0.4f;
+    
     private readonly List<string> logEntries = new List<string>();                         // Store raw log entries in a readonly list of strings.        -Could be used for a potential future saving/loading system. 
     private readonly List<TextMeshProUGUI> visualEntries = new List<TextMeshProUGUI>();    //store visual log entries in a readonly list of TextMeshProUGUI objects.
     private TextMeshProUGUI entryTemplate;
     private static PTAdventureLog _instance;                                               //cached singleton instance to avoid FindFirstObjectByType every call
+    
+    private readonly System.Collections.Generic.Queue<string> messageQueue = new System.Collections.Generic.Queue<string>();  // Queue for delayed messages
+    private bool isProcessingQueue = false;                                                // Track if queue is being processed
 #endregion
 
 #region Initialization
@@ -222,7 +229,42 @@ public class PTAdventureLog : MonoBehaviour
         PTAdventureLog logger = _instance != null ? _instance : FindFirstObjectByType<PTAdventureLog>();
         if (logger != null)
         {
-            logger.AddLogEntry(message);
+            logger.QueueLogMessage(message);
         }
+    }
+
+    /// <summary>
+    /// Queues a log message for delayed display. Messages are processed with a delay between each.
+    /// </summary>
+    private void QueueLogMessage(string message)
+    {
+        messageQueue.Enqueue(message);
+        
+        if (!isProcessingQueue)
+        {
+            StartCoroutine(ProcessMessageQueue());
+        }
+    }
+
+    /// <summary>
+    /// Processes queued log messages with delays between each message.
+    /// </summary>
+    private System.Collections.IEnumerator ProcessMessageQueue()
+    {
+        isProcessingQueue = true;
+        
+        while (messageQueue.Count > 0)
+        {
+            string message = messageQueue.Dequeue();
+            AddLogEntry(message);
+            
+            // Add delay before next message if there are more in queue
+            if (messageQueue.Count > 0 && logMessageDelay > 0)
+            {
+                yield return new WaitForSeconds(logMessageDelay);
+            }
+        }
+        
+        isProcessingQueue = false;
     }
 }

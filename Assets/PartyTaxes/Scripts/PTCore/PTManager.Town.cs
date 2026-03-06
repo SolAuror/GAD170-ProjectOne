@@ -78,6 +78,7 @@ public partial class PTManager
                 hasFought = false;                                                                          //reset hasFought for the new day
                 hasHealed = false;                                                                          //reset hasHealed for the new day
                 hasBeenBlessed = false;                                                                      //reset hasBeenBlessed for the new day
+                UnhideAllFledMembers();                                                                     //unhide any party members who fled during combat
                 
                 dailyMsg = "Heil, " + partyName +                                                           //greet the party,
                           "! You have " + gold +                                                            //display the party gold

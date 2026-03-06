@@ -43,6 +43,7 @@ public class PTSoul : MonoBehaviour                                             
     public bool isAlive => currentHP > 0;                                                           //bool to check if the soul is alive
     public bool isCowardly = false;                                                                   //bool to determine if the soul is cowardly, -could apply to enemies later
     public bool markedByDeath = false;                                                              //bool to track if character was resurrected, suffers stat penalties and cannot become cowardly
+    public bool hasFled = false;                                                                    //bool to track if character fled from combat during the current battle
 
     [Header("Enemy Attributes")]                                                                    //Header for visiual seperation in the inspector
     public bool isAdversary = false;                                                                //bool to determine if the soul is an enemy or a party member, default is false for party members
@@ -176,6 +177,56 @@ public class PTSoul : MonoBehaviour                                             
         if(!isAdversary)
         {
         PTAdventureLog.Log(Name + " leveled up! Their Daily wages are now " + dailywages + " gold."); // Log level up event
+        }
+    }
+
+    /// <summary>
+    /// Debug method to automatically assign all unspent attribute points.
+    /// Distributes points evenly across all attributes, with priority to Constitution and Might.
+    /// </summary>
+    public void AutoAssignAttributePoints()
+    {
+        if (atrPoints <= 0) return;
+
+        int pointsToSpend = atrPoints;
+        string[] priorityOrder = { "constitution", "might", "agility", "sense", "luck" }; // Priority order for spending
+        
+        while (pointsToSpend > 0)
+        {
+            bool pointsSpent = false;
+            
+            // Try to spend one point on each attribute in priority order
+            foreach (string attr in priorityOrder)
+            {
+                if (pointsToSpend <= 0) break;
+
+                // Check if attribute is not maxed out (99)
+                int currentValue = 0;
+                switch (attr)
+                {
+                    case "might":        currentValue = atrMight; break;
+                    case "agility":      currentValue = atrAgility; break;
+                    case "constitution": currentValue = atrConstitution; break;
+                    case "sense":        currentValue = atrSense; break;
+                    case "luck":         currentValue = atrLuck; break;
+                }
+
+                if (currentValue < 99)
+                {
+                    ChangeAttribute(attr, 1);
+                    atrPoints--;
+                    pointsToSpend--;
+                    pointsSpent = true;
+                }
+            }
+
+            // If no points could be spent (all attributes maxed), break to avoid infinite loop
+            if (!pointsSpent) break;
+        }
+
+        if (atrPoints == 0 && !isAdversary)
+        {
+            PTAdventureLog.Log("[DEBUG] Auto-assigned attribute points for " + Name + ".");
         }
     }
 

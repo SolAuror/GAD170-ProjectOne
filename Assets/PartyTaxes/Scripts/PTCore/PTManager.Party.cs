@@ -115,4 +115,39 @@ public partial class PTManager
         }
         return total / partyMembers.Count;
     }
+
+    /// <summary>
+    /// Debug method: Automatically assigns all unspent attribute points for all party members.
+    /// Only works when debugMode is enabled.
+    /// </summary>
+    public void DebugAutoAssignAllAttributePoints()
+    {
+        if (!debugMode)
+        {
+            Debug.LogWarning("Debug mode is not enabled. Cannot auto-assign attribute points.");
+            return;
+        }
+
+        int membersProcessed = 0;
+        foreach (PTSoul member in partyMembers)
+        {
+            if (member != null && member.atrPoints > 0)
+            {
+                member.AutoAssignAttributePoints();
+                membersProcessed++;
+            }
+        }
+
+        if (membersProcessed > 0)
+        {
+            PTAdventureLog.Log("[DEBUG] Auto-assigned attribute points for " + membersProcessed + " party member(s).");
+            Debug.Log("Auto-assigned attribute points for " + membersProcessed + " party member(s).");
+            UpdateUI();
+        }
+        else
+        {
+            PTAdventureLog.Log("[DEBUG] No party members have unspent attribute points.");
+            Debug.Log("No party members have unspent attribute points.");
+        }
+    }
 }
