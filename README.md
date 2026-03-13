@@ -118,7 +118,7 @@ Defines stat-modifying prefixes like "Mighty" (+3 Might), "Feeble" (-2 Might), e
 
 ---------------------------------------------------------------------------------------
 
-## 📚 Complete Method Breakdown (Layman's Terms)
+## Methods Breakdown
 
 ### **PTSoul.cs** — Individual Character
 
